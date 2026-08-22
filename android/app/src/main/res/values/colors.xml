@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="chambapp_splash_background">#FFF8F2</color>
+    <color name="chambapp_launcher_background">#FFF8F2</color>
+</resources>

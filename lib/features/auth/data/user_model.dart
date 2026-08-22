@@ -1,0 +1,22 @@
+import 'package:chambapp_mobile/features/auth/domain/user.dart';
+
+final class UserModel {
+  const UserModel._();
+
+  static User fromJson(Map<String, dynamic> json, {String? fallbackEmail}) =>
+      User(
+        id: _asInt(json['id']),
+        name: json['name']?.toString() ?? '',
+        role: UserRole.fromApi(json['role']),
+        email: json['email']?.toString() ?? fallbackEmail,
+        phone: json['phone']?.toString(),
+        avatarUrl: json['avatar']?.toString(),
+        status: json['status']?.toString(),
+        emailVerified: json['email_verified'] is bool
+            ? json['email_verified'] as bool
+            : null,
+      );
+
+  static int _asInt(Object? value) =>
+      value is int ? value : int.tryParse('$value') ?? 0;
+}
