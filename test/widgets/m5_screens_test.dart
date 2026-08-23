@@ -107,15 +107,15 @@ void main() {
       '1000',
     );
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Nota de la cotizaciÃ³n'),
+      find.widgetWithText(TextFormField, 'Nota de la cotización'),
       'Incluye mano de obra.',
     );
     await tester.pump();
     expect(find.text(r'$150.00 MXN'), findsOneWidget);
     expect(find.text(r'$850.00 MXN'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Enviar cotizaciÃ³n'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Enviar cotización'));
     await tester.pump();
-    await tester.tap(find.text('Enviando cotizaciÃ³nâ€¦'));
+    await tester.tap(find.text('Enviando cotización…'));
     expect(quotes.createCalls, 1);
     quotes.createCompleter!.complete(quote);
     await tester.pumpAndSettle();
@@ -142,10 +142,10 @@ void main() {
       '1000',
     );
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Nota de la cotizaciÃ³n'),
+      find.widgetWithText(TextFormField, 'Nota de la cotización'),
       'WhatsApp 5512345678',
     );
-    await tester.tap(find.widgetWithText(FilledButton, 'Enviar cotizaciÃ³n'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Enviar cotización'));
     await tester.pump();
     expect(find.text('No compartas datos de contacto.'), findsOneWidget);
   });
@@ -190,7 +190,7 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
-      expect(find.text('Tu pago estÃ¡ siendo procesado'), findsOneWidget);
+      expect(find.text('Tu pago está siendo procesado'), findsOneWidget);
       expect(find.text('Pago aprobado'), findsNothing);
     },
   );

@@ -51,7 +51,9 @@ Dio buildDio({
       onError: (error, handler) {
         final path = error.requestOptions.path;
         final isAuthAttempt =
-            path.contains('/auth/login') || path.contains('/auth/register');
+            path.contains('/auth/login') ||
+            path.contains('/auth/register') ||
+            path.contains('/auth/google');
         if (error.response?.statusCode == 401 && !isAuthAttempt) {
           unauthorizedEvents.notify();
         }

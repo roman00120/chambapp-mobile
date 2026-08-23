@@ -1,4 +1,6 @@
 import 'package:chambapp_mobile/app/providers.dart';
+import 'package:chambapp_mobile/features/admin/presentation/admin_feature.dart';
+import 'package:chambapp_mobile/features/admin/presentation/admin_operations.dart';
 import 'package:chambapp_mobile/features/auth/domain/user.dart';
 import 'package:chambapp_mobile/features/auth/presentation/auth_state.dart';
 import 'package:chambapp_mobile/features/auth/presentation/login_screen.dart';
@@ -51,8 +53,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth.$1 == AuthStatus.unauthenticated) {
         return onAuthPage ? null : '/login';
       }
-      final client = auth.$2 == UserRole.client;
+      final role = auth.$2;
+      final client = role == UserRole.client;
+      final admin = role == UserRole.admin;
       if (path == '/splash' || onAuthPage) {
+        return admin
+            ? '/admin/home'
+            : client
+            ? '/client/home'
+            : '/professional/home';
+      }
+      if (admin) return path.startsWith('/admin') ? null : '/admin/home';
+      if (path.startsWith('/admin')) {
         return client ? '/client/home' : '/professional/home';
       }
       if (client && path == '/home') return '/client/home';
@@ -73,6 +85,51 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(path: '/home', redirect: (_, _) => '/professional/home'),
       GoRoute(path: '/profile', redirect: (_, _) => '/professional/profile'),
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, shell) => AdminShell(navigationShell: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/home',
+                builder: (_, _) => const AdminDashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/users',
+                builder: (_, _) => const AdminUsersScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/professionals',
+                builder: (_, _) => const AdminProfessionalsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/operations',
+                builder: (_, _) => const AdminOperationsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/profile',
+                builder: (_, _) => const AdminProfileScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => ClientShell(navigationShell: shell),
         branches: [

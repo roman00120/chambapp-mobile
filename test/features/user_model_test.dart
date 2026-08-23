@@ -19,4 +19,17 @@ void main() {
       expect(user.avatarUrl, isNull);
     },
   );
+
+  test('reconoce el rol administrador para abrir su panel móvil', () {
+    final user = UserModel.fromJson({
+      'id': 1,
+      'name': 'Administración Chambapp',
+      'email': 'admin@example.test',
+      'role': 'admin',
+      'status': 'active',
+    });
+
+    expect(user.role, UserRole.admin);
+    expect(user.role.label, 'Administrador');
+  });
 }

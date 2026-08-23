@@ -273,7 +273,7 @@ class _StatusContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           FilledButton(
             onPressed: onViewDetails,
-            child: const Text('Ver cotizaciÃ³n'),
+            child: const Text('Ver cotización'),
           ),
         ],
       );

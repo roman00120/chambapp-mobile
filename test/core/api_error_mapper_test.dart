@@ -47,33 +47,36 @@ void main() {
     expect(mapper.map(error).message, 'Correo o contraseña incorrectos.');
   });
 
-  test('sanitiza claves internas como validation.required a mensajes en español', () {
-    final error = DioException.badResponse(
-      statusCode: 422,
-      requestOptions: RequestOptions(path: '/professional/profile'),
-      response: Response(
-        requestOptions: RequestOptions(path: '/professional/profile'),
+  test(
+    'sanitiza claves internas como validation.required a mensajes en español',
+    () {
+      final error = DioException.badResponse(
         statusCode: 422,
-        data: {
-          'message': 'validation.required',
-          'errors': {
-            'experience_years': ['validation.required'],
-            'name': ['validation.min.string'],
+        requestOptions: RequestOptions(path: '/professional/profile'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/professional/profile'),
+          statusCode: 422,
+          data: {
+            'message': 'validation.required',
+            'errors': {
+              'experience_years': ['validation.required'],
+              'name': ['validation.min.string'],
+            },
           },
-        },
-      ),
-    );
-    final mapped = mapper.map(error);
-    expect(mapped.statusCode, 422);
-    expect(
-      mapped.fieldErrors['experience_years'],
-      'Este campo es obligatorio.',
-    );
-    expect(
-      mapped.fieldErrors['name'],
-      'El valor ingresado es menor al permitido.',
-    );
-    expect(mapped.message, 'Este campo es obligatorio.');
-    expect(mapped.message, isNot(contains('validation.')));
-  });
+        ),
+      );
+      final mapped = mapper.map(error);
+      expect(mapped.statusCode, 422);
+      expect(
+        mapped.fieldErrors['experience_years'],
+        'Este campo es obligatorio.',
+      );
+      expect(
+        mapped.fieldErrors['name'],
+        'El valor ingresado es menor al permitido.',
+      );
+      expect(mapped.message, 'Este campo es obligatorio.');
+      expect(mapped.message, isNot(contains('validation.')));
+    },
+  );
 }

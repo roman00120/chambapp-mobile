@@ -25,6 +25,13 @@ void main() {
     expect(storage.email, 'ana@example.test');
   });
 
+  test('login Google guarda el token de Chambapp y correo recibido', () async {
+    final session = await repository.loginWithGoogle(idToken: 'google-token');
+    expect(session.user, testUser);
+    expect(storage.token, 'test-token');
+    expect(storage.email, 'ana@example.test');
+  });
+
   test('restaura /me cuando existe token y conserva correo local', () async {
     storage
       ..token = 'existing-token'

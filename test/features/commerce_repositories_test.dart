@@ -107,7 +107,7 @@ void main() {
     },
   );
 
-  test('checkout no envÃ­a amount y parsea cÃ¡lculo oficial 15%', () async {
+  test('checkout no envía amount y parsea cálculo oficial 15%', () async {
     final adapter = DioTestAdapter(
       (_) => jsonResponse({
         'data': {
@@ -128,7 +128,7 @@ void main() {
   });
 
   test(
-    'Payment conserva snapshot histÃ³rico 10% y tolera status desconocido',
+    'Payment conserva snapshot histórico 10% y tolera status desconocido',
     () async {
       final historical = PaymentModel.fromJson(paymentJson(percent: '10.00'));
       expect(historical.platformFeePercent, '10.00');

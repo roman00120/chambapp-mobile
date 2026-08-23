@@ -160,8 +160,13 @@ final class ApiProfessionalServiceRepository
             'price': input.price?.trim(),
           if (files.isNotEmpty) 'images': files,
         }, ListFormat.multiCompatible);
-        final response = await _dio.post<Map<String, dynamic>>(path, data: form);
-        return ProfessionalServiceModel.fromJson(jsonMap(response.data?['data']));
+        final response = await _dio.post<Map<String, dynamic>>(
+          path,
+          data: form,
+        );
+        return ProfessionalServiceModel.fromJson(
+          jsonMap(response.data?['data']),
+        );
       }
       if (files.isNotEmpty) {
         final form = FormData.fromMap({
@@ -174,8 +179,13 @@ final class ApiProfessionalServiceRepository
             'price': input.price?.trim(),
           'images': files,
         }, ListFormat.multiCompatible);
-        final response = await _dio.post<Map<String, dynamic>>(path, data: form);
-        return ProfessionalServiceModel.fromJson(jsonMap(response.data?['data']));
+        final response = await _dio.post<Map<String, dynamic>>(
+          path,
+          data: form,
+        );
+        return ProfessionalServiceModel.fromJson(
+          jsonMap(response.data?['data']),
+        );
       }
       final response = await _dio.patch<Map<String, dynamic>>(
         path,

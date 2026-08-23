@@ -22,6 +22,8 @@ void main() {
     expect(find.text('Iniciar sesión'), findsWidgets);
     expect(find.byKey(const Key('login_email')), findsOneWidget);
     expect(find.byKey(const Key('login_password')), findsOneWidget);
+    expect(find.byKey(const Key('login_google')), findsOneWidget);
+    expect(find.text('Continuar con Google'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('login_submit')));
     await tester.pump();

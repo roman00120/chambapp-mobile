@@ -1,6 +1,7 @@
 enum UserRole {
   client('client', 'Cliente'),
   professional('professional', 'Profesional'),
+  admin('admin', 'Administrador'),
   unsupported('unsupported', 'No compatible');
 
   const UserRole(this.apiValue, this.label);
@@ -10,6 +11,7 @@ enum UserRole {
   static UserRole fromApi(Object? value) => switch (value) {
     'client' => UserRole.client,
     'professional' => UserRole.professional,
+    'admin' => UserRole.admin,
     _ => UserRole.unsupported,
   };
 }

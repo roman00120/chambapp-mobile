@@ -40,6 +40,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _submitGoogle() async {
+    FocusScope.of(context).unfocus();
+    ref.read(authControllerProvider.notifier).clearFeedback();
+    final success = await ref
+        .read(authControllerProvider.notifier)
+        .loginWithGoogle();
+    if (!success && mounted) {
+      final message = ref.read(authControllerProvider).message;
+      if (message != null) AppFeedback.show(context, message);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
@@ -100,6 +112,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         label: 'Iniciar sesión',
                         isLoading: state.isSubmitting,
                         onPressed: _submit,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: Text(
+                              'o continúa con',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      SizedBox(
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          key: const Key('login_google'),
+                          onPressed: state.isSubmitting ? null : _submitGoogle,
+                          icon: const Text(
+                            'G',
+                            style: TextStyle(
+                              color: Color(0xFF4285F4),
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          label: const Text('Continuar con Google'),
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       TextButton(

@@ -80,6 +80,10 @@ const professionalJob = JobModel(
 
 final class FakeProfessionalAuthRepository implements AuthRepository {
   @override
+  Future<AuthSession> loginWithGoogle({required String idToken}) async =>
+      professionalSession;
+
+  @override
   Future<void> clearLocalSession() async {}
   @override
   Future<AuthSession> login({

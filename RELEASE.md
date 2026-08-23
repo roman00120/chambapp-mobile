@@ -60,11 +60,11 @@ flutter pub outdated
 ```powershell
 flutter build apk --release `
   --dart-define=APP_ENV=production `
-  --dart-define=API_BASE_URL=https://DOMINIO-REAL/api/v1
+  --dart-define=API_BASE_URL=https://chambapp.com.mx/api/v1
 
 flutter build appbundle --release `
   --dart-define=APP_ENV=production `
-  --dart-define=API_BASE_URL=https://DOMINIO-REAL/api/v1
+  --dart-define=API_BASE_URL=https://chambapp.com.mx/api/v1
 ```
 
 La compilación falla si la URL no es HTTPS, si falta `APP_ENV=production`, si falta la firma o si el keystore no existe.

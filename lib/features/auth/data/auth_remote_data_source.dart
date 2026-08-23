@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 
 abstract interface class AuthRemoteDataSource {
   Future<AuthSession> login({required String email, required String password});
+  Future<AuthSession> loginWithGoogle({required String idToken});
   Future<AuthSession> register(RegistrationInput input);
   Future<User> me({String? fallbackEmail});
   Future<void> logout();
@@ -29,6 +30,15 @@ final class DioAuthRemoteDataSource implements AuthRemoteDataSource {
       },
     );
     return _session(response.data!, fallbackEmail: email.trim());
+  }
+
+  @override
+  Future<AuthSession> loginWithGoogle({required String idToken}) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/google',
+      data: {'id_token': idToken, 'device_name': AppConstants.deviceName},
+    );
+    return _session(response.data!, fallbackEmail: '');
   }
 
   @override

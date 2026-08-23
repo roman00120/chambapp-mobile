@@ -28,6 +28,21 @@ final class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthSession> loginWithGoogle({required String idToken}) async {
+    try {
+      final session = await _remote.loginWithGoogle(idToken: idToken);
+      _ensureSupportedRole(session.user);
+      await _storage.save(
+        token: session.token,
+        email: session.user.email ?? '',
+      );
+      return session;
+    } catch (error) {
+      throw _errors.map(error);
+    }
+  }
+
+  @override
   Future<AuthSession> register(RegistrationInput input) async {
     try {
       final session = await _remote.register(input);

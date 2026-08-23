@@ -76,7 +76,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
             Text(
               job.status == JobStatus.paid
                   ? 'Pago aprobado'
-                  : 'CotizaciÃ³n aceptada',
+                  : 'Cotización aceptada',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -99,13 +99,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                       )
                     : const Icon(Icons.open_in_new),
                 label: Text(
-                  _preparing ? 'Preparando pagoâ€¦' : 'Pagar en Chambapp',
+                  _preparing ? 'Preparando pago…' : 'Pagar en Chambapp',
                 ),
               ),
             if (payment != null && payment.status != PaymentStatus.approved)
               TextButton(
                 onPressed: _checking ? null : _verify,
-                child: Text(_checking ? 'Verificandoâ€¦' : 'Verificar pago'),
+                child: Text(_checking ? 'Verificando…' : 'Verificar pago'),
               ),
           ],
         ),
@@ -119,7 +119,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       builder: (context) => AlertDialog(
         title: const Text('Abrir Mercado Pago'),
         content: Text(
-          'Total: \$${job.agreedPrice ?? _payment?.grossAmount ?? '--'} ${job.currency ?? 'MXN'}\n\nEl pago se confirmarÃ¡ Ãºnicamente cuando Laravel reciba el resultado de Mercado Pago.',
+          'Total: \$${job.agreedPrice ?? _payment?.grossAmount ?? '--'} ${job.currency ?? 'MXN'}\n\nEl pago se confirmará únicamente cuando Laravel reciba el resultado de Mercado Pago.',
         ),
         actions: [
           TextButton(
@@ -173,13 +173,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       setState(() {
         _payment = job.payment;
         _message = job.payment == null
-            ? 'No pudimos confirmar si se creÃ³ el pago. Verifica antes de intentar nuevamente.'
-            : 'Encontramos el intento de pago. Verificaremos su estado sin crear otro automÃ¡ticamente.';
+            ? 'No pudimos confirmar si se creó el pago. Verifica antes de intentar nuevamente.'
+            : 'Encontramos el intento de pago. Verificaremos su estado sin crear otro automáticamente.';
       });
       if (job.payment != null) _schedulePoll();
     } catch (_) {
       if (mounted) {
-        setState(() => _message = 'No pudimos verificar el pago todavÃ­a.');
+        setState(() => _message = 'No pudimos verificar el pago todavía.');
       }
     }
   }
@@ -204,7 +204,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       if (!fresh.status.terminal) _schedulePoll();
     } catch (_) {
       if (mounted) {
-        setState(() => _message = 'No pudimos verificar el pago todavÃ­a.');
+        setState(() => _message = 'No pudimos verificar el pago todavía.');
         _schedulePoll(seconds: 15);
       }
     } finally {
@@ -259,19 +259,19 @@ class _PaymentState extends StatelessWidget {
       PaymentStatus.approved => (
         Icons.check_circle,
         'Pago aprobado',
-        'Tu chamba ya estÃ¡ contratada.',
+        'Tu chamba ya está contratada.',
         AppColors.success,
       ),
       PaymentStatus.rejected => (
         Icons.error_outline,
         'No pudimos procesar el pago',
-        'Puedes iniciar un nuevo intento cuando estÃ©s listo.',
+        'Puedes iniciar un nuevo intento cuando estés listo.',
         AppColors.danger,
       ),
       PaymentStatus.cancelled => (
         Icons.cancel_outlined,
         'Pago cancelado',
-        'La chamba no se marcÃ³ como pagada.',
+        'La chamba no se marcó como pagada.',
         AppColors.danger,
       ),
       PaymentStatus.refunded || PaymentStatus.partiallyRefunded => (
@@ -282,20 +282,20 @@ class _PaymentState extends StatelessWidget {
       ),
       PaymentStatus.pending || PaymentStatus.processing => (
         Icons.hourglass_top,
-        'Tu pago estÃ¡ siendo procesado',
+        'Tu pago está siendo procesado',
         'Volver del navegador no significa que haya sido aprobado.',
         AppColors.amberDark,
       ),
       _ when job.status == JobStatus.paid => (
         Icons.check_circle,
         'Pago aprobado',
-        'Tu chamba ya estÃ¡ contratada.',
+        'Tu chamba ya está contratada.',
         AppColors.success,
       ),
       _ => (
         Icons.lock_outline,
         'Pago pendiente',
-        'Mercado Pago y Laravel confirmarÃ¡n el resultado.',
+        'Mercado Pago y Laravel confirmarán el resultado.',
         AppColors.navy,
       ),
     };

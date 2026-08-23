@@ -9,52 +9,49 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/dio_test_adapter.dart';
 
 void main() {
-  test(
-    'perfil profesional parsea verificación y actualiza campos permitidos vía JSON y multipart',
-    () async {
-      final adapter = DioTestAdapter((options) {
-        expect(options.path, '/professional/profile');
-        return jsonResponse({
-          'data': {
-            'id': 5,
-            'name': 'Carlos',
-            'rating': '4.80',
-            'total_reviews': 9,
-            'completed_jobs': 20,
-            'verification_status': 'verified',
-            'is_available': false,
-            'postal_code': '44100',
-          },
-        });
+  test('perfil profesional parsea verificación y actualiza campos permitidos vía JSON y multipart', () async {
+    final adapter = DioTestAdapter((options) {
+      expect(options.path, '/professional/profile');
+      return jsonResponse({
+        'data': {
+          'id': 5,
+          'name': 'Carlos',
+          'rating': '4.80',
+          'total_reviews': 9,
+          'completed_jobs': 20,
+          'verification_status': 'verified',
+          'is_available': false,
+          'postal_code': '44100',
+        },
       });
-      final repository = ApiProfessionalProfileRepository(
-        testDio(adapter),
-        const ApiErrorMapper(),
-      );
-      final profile = await repository.getProfile();
-      expect(profile.verification, ProfessionalVerification.verified);
-      expect(profile.rating, 4.8);
-      expect(profile.postalCode, '44100');
+    });
+    final repository = ApiProfessionalProfileRepository(
+      testDio(adapter),
+      const ApiErrorMapper(),
+    );
+    final profile = await repository.getProfile();
+    expect(profile.verification, ProfessionalVerification.verified);
+    expect(profile.rating, 4.8);
+    expect(profile.postalCode, '44100');
 
-      await repository.updateProfile(
-        const ProfessionalProfileInput(
-          name: 'Carlos',
-          phone: '5512345678',
-          experienceYears: 8,
-          bio: 'Experiencia profesional',
-          postalCode: '44100',
-        ),
-      );
-      final jsonPayload = adapter.requests.last.data as Map<String, dynamic>;
-      expect(adapter.requests.last.method, 'PATCH');
-      expect(jsonPayload['name'], 'Carlos');
-      expect(jsonPayload['phone'], '5512345678');
-      expect(jsonPayload['experience_years'], 8);
-      expect(jsonPayload['postal_code'], '44100');
-      expect(jsonPayload.containsKey('verification_status'), isFalse);
-      expect(jsonPayload.containsKey('rating'), isFalse);
-    },
-  );
+    await repository.updateProfile(
+      const ProfessionalProfileInput(
+        name: 'Carlos',
+        phone: '5512345678',
+        experienceYears: 8,
+        bio: 'Experiencia profesional',
+        postalCode: '44100',
+      ),
+    );
+    final jsonPayload = adapter.requests.last.data as Map<String, dynamic>;
+    expect(adapter.requests.last.method, 'PATCH');
+    expect(jsonPayload['name'], 'Carlos');
+    expect(jsonPayload['phone'], '5512345678');
+    expect(jsonPayload['experience_years'], 8);
+    expect(jsonPayload['postal_code'], '44100');
+    expect(jsonPayload.containsKey('verification_status'), isFalse);
+    expect(jsonPayload.containsKey('rating'), isFalse);
+  });
 
   test(
     'availability envía preferencia, radio y ubicación al endpoint real',

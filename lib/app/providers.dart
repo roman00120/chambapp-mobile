@@ -3,6 +3,7 @@ import 'package:chambapp_mobile/core/network/api_client.dart';
 import 'package:chambapp_mobile/core/storage/session_storage.dart';
 import 'package:chambapp_mobile/features/auth/data/auth_remote_data_source.dart';
 import 'package:chambapp_mobile/features/auth/data/auth_repository_impl.dart';
+import 'package:chambapp_mobile/features/auth/data/google_identity_provider.dart';
 import 'package:chambapp_mobile/features/auth/domain/auth_repository.dart';
 import 'package:chambapp_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:chambapp_mobile/features/auth/presentation/auth_state.dart';
@@ -41,6 +42,10 @@ final authRepositoryProvider = Provider<AuthRepository>(
     ref.watch(sessionStorageProvider),
     const ApiErrorMapper(),
   ),
+);
+
+final googleIdentityProvider = Provider<GoogleIdentityProvider>(
+  (ref) => NativeGoogleIdentityProvider(),
 );
 
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(

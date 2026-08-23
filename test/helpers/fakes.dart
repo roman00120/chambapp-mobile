@@ -56,6 +56,12 @@ final class FakeRemoteDataSource implements AuthRemoteDataSource {
   }
 
   @override
+  Future<AuthSession> loginWithGoogle({required String idToken}) async {
+    if (error != null) throw error!;
+    return session;
+  }
+
+  @override
   Future<AuthSession> register(RegistrationInput input) async {
     if (error != null) throw error!;
     return session;
@@ -88,6 +94,10 @@ final class FakeAuthRepository implements AuthRepository {
     if (loginError != null) return Future.error(loginError!);
     return loginCompleter?.future ?? Future.value(testSession);
   }
+
+  @override
+  Future<AuthSession> loginWithGoogle({required String idToken}) async =>
+      testSession;
 
   @override
   Future<AuthSession> register(RegistrationInput input) async => testSession;

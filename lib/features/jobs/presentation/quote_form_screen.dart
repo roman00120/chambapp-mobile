@@ -43,7 +43,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
     final cents = _parseCents(_amount.text);
     final fee = cents == null ? null : (cents * 15 / 100).round();
     return Scaffold(
-      appBar: AppBar(title: const Text('Enviar cotizaciÃ³n')),
+      appBar: AppBar(title: const Text('Enviar cotización')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -76,12 +76,12 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                   const SizedBox(height: AppSpacing.md),
                   AppTextField(
                     controller: _description,
-                    label: 'Nota de la cotizaciÃ³n',
-                    hint: 'Incluye mano de obra y material bÃ¡sico.',
+                    label: 'Nota de la cotización',
+                    hint: 'Incluye mano de obra y material básico.',
                     maxLines: 4,
                     maxLength: 300,
                     validator: (value) => value?.trim().isEmpty == true
-                        ? 'Describe brevemente quÃ© incluye.'
+                        ? 'Describe brevemente qué incluye.'
                         : null,
                   ),
                 ],
@@ -97,12 +97,12 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'PrevisualizaciÃ³n estimada',
+                        'Previsualización estimada',
                         style: TextStyle(fontWeight: FontWeight.w800),
                       ),
                       _MoneyRow(label: 'Precio', cents: cents),
                       _MoneyRow(
-                        label: 'ComisiÃ³n Chambapp estimada (15%)',
+                        label: 'Comisión Chambapp estimada (15%)',
                         cents: fee,
                       ),
                       _MoneyRow(
@@ -110,7 +110,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                         cents: cents - fee,
                       ),
                       const Text(
-                        'Laravel calcularÃ¡ y confirmarÃ¡ los importes oficiales al crear el pago.',
+                        'Laravel calculará y confirmará los importes oficiales al crear el pago.',
                         style: TextStyle(fontSize: 12),
                       ),
                     ],
@@ -129,7 +129,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
             FilledButton(
               onPressed: _submitting ? null : _submit,
               child: Text(
-                _submitting ? 'Enviando cotizaciÃ³nâ€¦' : 'Enviar cotizaciÃ³n',
+                _submitting ? 'Enviando cotización…' : 'Enviar cotización',
               ),
             ),
           ],

@@ -15,7 +15,7 @@ class BrandHeader extends StatelessWidget {
         label: 'Chambapp',
         child: ExcludeSemantics(
           child: Image.asset(
-            'assets/branding/chambapp-logo-current.jpeg',
+            'assets/branding/chambapp-logo.png',
             width: 164,
             height: 86,
             fit: BoxFit.contain,

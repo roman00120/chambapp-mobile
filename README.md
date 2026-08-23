@@ -121,12 +121,12 @@ La aplicación maneja configuración por variables de compilación (`--dart-defi
 # APK Release
 flutter build apk --release \
   --dart-define=APP_ENV=production \
-  --dart-define=API_BASE_URL=https://api.chambapp.com/api/v1
+  --dart-define=API_BASE_URL=https://chambapp.com.mx/api/v1
 
 # Android App Bundle (Play Store)
 flutter build appbundle --release \
   --dart-define=APP_ENV=production \
-  --dart-define=API_BASE_URL=https://api.chambapp.com/api/v1
+  --dart-define=API_BASE_URL=https://chambapp.com.mx/api/v1
 ```
 
 ---
