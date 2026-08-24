@@ -50,6 +50,7 @@ final class JobModel {
     this.scheduledSlot,
     this.agreedPrice,
     this.currency,
+    this.economicBreakdown,
     this.quotes = const [],
     this.payment,
     this.review,
@@ -77,6 +78,7 @@ final class JobModel {
   final String? scheduledSlot;
   final String? agreedPrice;
   final String? currency;
+  final EconomicBreakdown? economicBreakdown;
   final List<JobQuoteModel> quotes;
   final PaymentModel? payment;
   final ReviewModel? review;
@@ -124,6 +126,9 @@ final class JobModel {
       scheduledSlot: json['scheduled_slot']?.toString(),
       agreedPrice: json['agreed_price']?.toString(),
       currency: json['currency']?.toString(),
+      economicBreakdown: json['economic_breakdown'] is Map
+          ? EconomicBreakdown.fromJson(jsonMap(json['economic_breakdown']))
+          : null,
       quotes: jsonList(json['quotes']).map(JobQuoteModel.fromJson).toList(),
       payment: json['payment'] is Map
           ? PaymentModel.fromJson(jsonMap(json['payment']))
@@ -177,6 +182,7 @@ final class JobQuoteModel {
     required this.currency,
     required this.description,
     required this.status,
+    this.economicBreakdown,
     this.expiresAt,
     this.acceptedAt,
     this.rejectedAt,
@@ -189,6 +195,7 @@ final class JobQuoteModel {
   final String currency;
   final String description;
   final QuoteStatus status;
+  final EconomicBreakdown? economicBreakdown;
   final DateTime? expiresAt;
   final DateTime? acceptedAt;
   final DateTime? rejectedAt;
@@ -202,6 +209,9 @@ final class JobQuoteModel {
     currency: json['currency']?.toString() ?? 'MXN',
     description: json['description']?.toString() ?? '',
     status: QuoteStatus.fromApi(json['status']),
+    economicBreakdown: json['economic_breakdown'] is Map
+        ? EconomicBreakdown.fromJson(jsonMap(json['economic_breakdown']))
+        : null,
     expiresAt: DateTime.tryParse(json['expires_at']?.toString() ?? ''),
     acceptedAt: DateTime.tryParse(json['accepted_at']?.toString() ?? ''),
     rejectedAt: DateTime.tryParse(json['rejected_at']?.toString() ?? ''),
@@ -249,6 +259,17 @@ final class PaymentModel {
     required this.platformFee,
     required this.professionalAmount,
     required this.currency,
+    this.economicModelVersion = 'single_platform_fee_15',
+    this.baseAmount,
+    this.clientServiceFeePercent,
+    this.clientServiceFee,
+    this.professionalCommissionPercent,
+    this.professionalCommission,
+    this.customerTotal,
+    this.platformGrossFee,
+    this.professionalAmountBeforeExternalCosts,
+    this.providerFee,
+    this.professionalSettlementAmount,
     this.paidAt,
   });
   final int id;
@@ -259,19 +280,100 @@ final class PaymentModel {
   final String platformFee;
   final String professionalAmount;
   final String currency;
+  final String economicModelVersion;
+  final String? baseAmount;
+  final String? clientServiceFeePercent;
+  final String? clientServiceFee;
+  final String? professionalCommissionPercent;
+  final String? professionalCommission;
+  final String? customerTotal;
+  final String? platformGrossFee;
+  final String? professionalAmountBeforeExternalCosts;
+  final String? providerFee;
+  final String? professionalSettlementAmount;
   final DateTime? paidAt;
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) => PaymentModel(
     id: jsonInt(json['id']),
     jobId: jsonInt(json['job_id']),
     status: PaymentStatus.fromApi(json['status']),
-    grossAmount: json['gross_amount']?.toString() ?? '0.00',
-    platformFeePercent: json['platform_fee_percent']?.toString() ?? '0.00',
-    platformFee: json['platform_fee']?.toString() ?? '0.00',
-    professionalAmount: json['professional_amount']?.toString() ?? '0.00',
+    grossAmount:
+        json['gross_amount']?.toString() ??
+        json['customer_total']?.toString() ??
+        '0.00',
+    platformFeePercent:
+        json['platform_fee_percent']?.toString() ??
+        json['professional_commission_percent']?.toString() ??
+        '0.00',
+    platformFee:
+        json['platform_fee']?.toString() ??
+        json['platform_gross_fee']?.toString() ??
+        json['professional_commission']?.toString() ??
+        '0.00',
+    professionalAmount:
+        json['professional_amount']?.toString() ??
+        json['professional_amount_before_external_costs']?.toString() ??
+        '0.00',
     currency: json['currency']?.toString() ?? 'MXN',
+    economicModelVersion:
+        json['economic_model_version']?.toString() ?? 'single_platform_fee_15',
+    baseAmount: json['base_amount']?.toString(),
+    clientServiceFeePercent: json['client_service_fee_percent']?.toString(),
+    clientServiceFee: json['client_service_fee']?.toString(),
+    professionalCommissionPercent: json['professional_commission_percent']
+        ?.toString(),
+    professionalCommission: json['professional_commission']?.toString(),
+    customerTotal: json['customer_total']?.toString(),
+    platformGrossFee: json['platform_gross_fee']?.toString(),
+    professionalAmountBeforeExternalCosts:
+        json['professional_amount_before_external_costs']?.toString(),
+    providerFee: json['provider_fee']?.toString(),
+    professionalSettlementAmount: json['professional_settlement_amount']
+        ?.toString(),
     paidAt: DateTime.tryParse(json['paid_at']?.toString() ?? ''),
   );
+}
+
+final class EconomicBreakdown {
+  const EconomicBreakdown({
+    required this.baseAmount,
+    required this.currency,
+    this.economicModelVersion,
+    this.clientServiceFeePercent,
+    this.clientServiceFee,
+    this.professionalCommissionPercent,
+    this.professionalCommission,
+    this.customerTotal,
+    this.platformGrossFee,
+    this.professionalAmountBeforeExternalCosts,
+  });
+
+  final String baseAmount;
+  final String currency;
+  final String? economicModelVersion;
+  final String? clientServiceFeePercent;
+  final String? clientServiceFee;
+  final String? professionalCommissionPercent;
+  final String? professionalCommission;
+  final String? customerTotal;
+  final String? platformGrossFee;
+  final String? professionalAmountBeforeExternalCosts;
+
+  factory EconomicBreakdown.fromJson(Map<String, dynamic> json) =>
+      EconomicBreakdown(
+        baseAmount: json['base_amount']?.toString() ?? '0.00',
+        currency: json['currency']?.toString() ?? 'MXN',
+        economicModelVersion: json['economic_model_version']?.toString(),
+        clientServiceFeePercent: json['client_service_fee_percent']?.toString(),
+        clientServiceFee: json['client_service_fee']?.toString(),
+        professionalCommissionPercent: json['professional_commission_percent']
+            ?.toString(),
+        professionalCommission: json['professional_commission']?.toString(),
+        customerTotal: json['customer_total']?.toString(),
+        platformGrossFee: json['platform_gross_fee']?.toString(),
+        professionalAmountBeforeExternalCosts:
+            json['professional_amount_before_external_costs']?.toString(),
+      );
 }
 
 final class CheckoutResult {

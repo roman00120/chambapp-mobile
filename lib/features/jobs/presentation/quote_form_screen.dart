@@ -49,7 +49,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
             Text(
-              'Precio del trabajo',
+              'Precio base del trabajo',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -100,7 +100,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                         'Previsualización estimada',
                         style: TextStyle(fontWeight: FontWeight.w800),
                       ),
-                      _MoneyRow(label: 'Precio', cents: cents),
+                      _MoneyRow(label: 'Precio base', cents: cents),
                       _MoneyRow(
                         label: 'Comisión Chambapp estimada (15%)',
                         cents: fee,
@@ -110,7 +110,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                         cents: cents - fee,
                       ),
                       const Text(
-                        'Laravel calculará y confirmará los importes oficiales al crear el pago.',
+                        'Estimado antes de costos externos. Laravel confirma los importes oficiales.',
                         style: TextStyle(fontSize: 12),
                       ),
                     ],

@@ -12,7 +12,12 @@ void main() {
         (options) => options.path == '/favorites'
             ? jsonResponse({
                 'data': [
-                  {'id': 4, 'name': 'Ana Pro', 'rating': '5', 'verified': true},
+                  {
+                    'id': 4,
+                    'name': 'Ana Pro',
+                    'rating': '5',
+                    'identity_verified': true,
+                  },
                 ],
               })
             : jsonResponse({'data': null}),

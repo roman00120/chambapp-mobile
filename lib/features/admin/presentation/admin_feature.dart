@@ -42,6 +42,8 @@ final class AdminProfessionalItem {
     required this.email,
     required this.city,
     required this.status,
+    required this.identityStatus,
+    required this.identityVerified,
     required this.services,
   });
   final int id;
@@ -49,6 +51,8 @@ final class AdminProfessionalItem {
   final String email;
   final String city;
   final String status;
+  final String identityStatus;
+  final bool identityVerified;
   final int services;
 
   factory AdminProfessionalItem.fromJson(Map<String, dynamic> json) =>
@@ -57,7 +61,13 @@ final class AdminProfessionalItem {
         name: json['name']?.toString() ?? '',
         email: json['email']?.toString() ?? '',
         city: json['city']?.toString() ?? 'Sin ciudad',
-        status: json['verification_status']?.toString() ?? '',
+        status:
+            json['profile_review_status']?.toString() ??
+            json['verification_status']?.toString() ??
+            '',
+        identityStatus:
+            json['identity_verification_status']?.toString() ?? 'not_started',
+        identityVerified: json['identity_verified'] == true,
         services: (json['active_services_count'] as num?)?.toInt() ?? 0,
       );
 }
@@ -255,7 +265,10 @@ class AdminDashboardScreen extends ConsumerWidget {
                 data.count('pending_reports'),
                 Icons.flag,
               ),
-              _AmountMetric('Comisiones', data.amount('platform_fees')),
+              _AmountMetric(
+                'Ingreso bruto plataforma',
+                data.amount('platform_fees'),
+              ),
             ],
           ),
         ),
@@ -425,16 +438,28 @@ class AdminProfessionalsScreen extends ConsumerWidget {
                       Row(
                         children: [
                           Chip(label: Text(_verification(item.status))),
+                          const SizedBox(width: 6),
+                          Chip(
+                            avatar: Icon(
+                              item.identityVerified
+                                  ? Icons.verified_user
+                                  : Icons.badge_outlined,
+                              size: 18,
+                            ),
+                            label: Text(
+                              _identityVerification(item.identityStatus),
+                            ),
+                          ),
                           const Spacer(),
                           TextButton(
                             onPressed: () => _reject(context, ref, item),
-                            child: const Text('Rechazar'),
+                            child: const Text('Rechazar perfil'),
                           ),
                           const SizedBox(width: 6),
                           FilledButton(
                             onPressed: () =>
                                 _verify(context, ref, item, 'verified'),
-                            child: const Text('Aprobar'),
+                            child: const Text('Habilitar perfil'),
                           ),
                         ],
                       ),
@@ -639,8 +664,16 @@ String _userStatus(String value) => switch (value) {
   _ => value,
 };
 String _verification(String value) => switch (value) {
-  'verified' => 'Verificado',
-  'pending' => 'Pendiente',
-  'rejected' => 'Rechazado',
-  _ => 'Sin verificar',
+  'verified' => 'Perfil habilitado',
+  'pending' => 'Perfil pendiente',
+  'rejected' => 'Perfil rechazado',
+  _ => 'Perfil sin revisar',
+};
+String _identityVerification(String value) => switch (value) {
+  'verified' => 'Identidad verificada',
+  'pending' => 'Identidad en revisión',
+  'rejected' => 'Identidad no aprobada',
+  'needs_review' => 'Identidad requiere revisión',
+  'expired' => 'Identidad vencida',
+  _ => 'Identidad no iniciada',
 };

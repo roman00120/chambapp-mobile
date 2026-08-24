@@ -14,6 +14,17 @@ final professionalProfileRepositoryProvider =
         const ApiErrorMapper(),
       ),
     );
+final identityVerificationRepositoryProvider =
+    Provider<IdentityVerificationRepository>(
+      (ref) => ApiIdentityVerificationRepository(
+        ref.watch(dioProvider),
+        const ApiErrorMapper(),
+      ),
+    );
+
+final identityVerificationProvider = FutureProvider<IdentityVerificationModel>(
+  (ref) => ref.watch(identityVerificationRepositoryProvider).getStatus(),
+);
 final availabilityRepositoryProvider = Provider<AvailabilityRepository>(
   (ref) =>
       ApiAvailabilityRepository(ref.watch(dioProvider), const ApiErrorMapper()),

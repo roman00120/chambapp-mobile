@@ -31,6 +31,21 @@ Map<String, dynamic> paymentJson({
   'currency': 'MXN',
 };
 
+Map<String, dynamic> dualFeePaymentJson() => {
+  'id': 8,
+  'job_id': 12,
+  'status': 'pending',
+  'economic_model_version': 'client_15_professional_15',
+  'base_amount': '1000.00',
+  'client_service_fee_percent': '15.00',
+  'client_service_fee': '150.00',
+  'customer_total': '1150.00',
+  'professional_commission_percent': '15.00',
+  'professional_commission': '150.00',
+  'professional_amount_before_external_costs': '850.00',
+  'currency': 'MXN',
+};
+
 void main() {
   test(
     'QuoteRepository usa crear, listar, aceptar y rechazar reales',
@@ -138,6 +153,20 @@ void main() {
         PaymentModel.fromJson(paymentJson(status: 'future')).status,
         PaymentStatus.unknown,
       );
+    },
+  );
+
+  test(
+    'Payment V2 consume el desglose oficial del servidor sin calcularlo',
+    () {
+      final payment = PaymentModel.fromJson(dualFeePaymentJson());
+
+      expect(payment.baseAmount, '1000.00');
+      expect(payment.clientServiceFee, '150.00');
+      expect(payment.customerTotal, '1150.00');
+      expect(payment.professionalCommission, '150.00');
+      expect(payment.professionalAmountBeforeExternalCosts, '850.00');
+      expect(payment.grossAmount, '1150.00');
     },
   );
 

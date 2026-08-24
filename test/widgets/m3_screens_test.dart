@@ -226,7 +226,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Carlos Ramírez'), findsOneWidget);
-    expect(find.text('Verificado'), findsOneWidget);
+    expect(find.text('Perfil habilitado'), findsOneWidget);
     expect(find.text('8 años de experiencia'), findsOneWidget);
   });
 

@@ -87,7 +87,10 @@ class ProfessionalDetailScreen extends ConsumerWidget {
                   if (professional.verified)
                     const Padding(
                       padding: EdgeInsets.only(left: 6),
-                      child: Icon(Icons.verified, color: AppColors.success),
+                      child: Tooltip(
+                        message: 'Identidad verificada',
+                        child: Icon(Icons.verified, color: AppColors.success),
+                      ),
                     ),
                 ],
               ),
@@ -98,6 +101,14 @@ class ProfessionalDetailScreen extends ConsumerWidget {
               ),
               if (professional.generalLocation.isNotEmpty)
                 Text(professional.generalLocation, textAlign: TextAlign.center),
+              if (professional.verified)
+                const Padding(
+                  padding: EdgeInsets.only(top: AppSpacing.sm),
+                  child: Text(
+                    'Identidad verificada significa que se completó la comprobación de identidad de Chambapp. No garantiza calidad, licencias, antecedentes ni el resultado del servicio.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               const SizedBox(height: AppSpacing.lg),
               if (professional.bio?.isNotEmpty == true)
                 Text(

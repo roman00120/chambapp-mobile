@@ -432,6 +432,27 @@ class _AdminOperationsScreenState extends ConsumerState<AdminOperationsScreen> {
             Text(item.subtitle),
             const SizedBox(height: 8),
             Chip(label: Text(_status(item.status))),
+            if (section == AdminSection.payments ||
+                section == AdminSection.commissions) ...[
+              Text('Precio base: \$${item.data['base_amount'] ?? '0.00'}'),
+              Text(
+                'Cargo cliente: \$${item.data['client_service_fee'] ?? '0.00'}',
+              ),
+              Text(
+                'Comisión profesional: \$${item.data['professional_commission'] ?? '0.00'}',
+              ),
+              Text('Total cliente: \$${item.data['customer_total'] ?? '0.00'}'),
+              Text(
+                'Ingreso bruto plataforma: \$${item.data['platform_gross_fee'] ?? '0.00'}',
+              ),
+              Text(
+                'Profesional antes de costos: \$${item.data['professional_amount_before_external_costs'] ?? '0.00'}',
+              ),
+              Text(
+                'Costo proveedor: \$${item.data['provider_fee'] ?? 'No informado'}',
+              ),
+              Text('Reembolso: \$${item.data['refunded_amount'] ?? '0.00'}'),
+            ],
             if (section == AdminSection.categories)
               Align(
                 alignment: Alignment.centerRight,
@@ -462,11 +483,11 @@ class _CommissionSummary extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Resumen de comisiones',
+            'Resumen de cargos',
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          Text('Cobrado: \$${summary['gross'] ?? '0.00'}'),
-          Text('Comisión: \$${summary['fees'] ?? '0.00'}'),
+          Text('Total cobrado: \$${summary['gross'] ?? '0.00'}'),
+          Text('Ingreso bruto plataforma: \$${summary['fees'] ?? '0.00'}'),
           Text('Profesionales: \$${summary['professional_amount'] ?? '0.00'}'),
         ],
       ),

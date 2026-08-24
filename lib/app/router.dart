@@ -27,6 +27,7 @@ import 'package:chambapp_mobile/features/professional/domain/professional_models
 import 'package:chambapp_mobile/features/professional/presentation/availability_screen.dart';
 import 'package:chambapp_mobile/features/professional/presentation/earnings_screen.dart';
 import 'package:chambapp_mobile/features/professional/presentation/edit_professional_profile_screen.dart';
+import 'package:chambapp_mobile/features/professional/presentation/identity_verification_screen.dart';
 import 'package:chambapp_mobile/features/professional/presentation/professional_home_screen.dart';
 import 'package:chambapp_mobile/features/professional/presentation/professional_jobs_screen.dart';
 import 'package:chambapp_mobile/features/professional/presentation/professional_profile_screen.dart';
@@ -226,6 +227,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/professional/availability',
         builder: (_, _) => const AvailabilityScreen(),
+      ),
+      GoRoute(
+        path: '/professional/identity-verification',
+        builder: (_, _) => const IdentityVerificationScreen(),
       ),
       GoRoute(
         path: '/professional/profile/edit',

@@ -119,7 +119,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       builder: (context) => AlertDialog(
         title: const Text('Abrir Mercado Pago'),
         content: Text(
-          'Total: \$${job.agreedPrice ?? _payment?.grossAmount ?? '--'} ${job.currency ?? 'MXN'}\n\nEl pago se confirmará únicamente cuando Laravel reciba el resultado de Mercado Pago.',
+          'Total: \$${_payment?.customerTotal ?? job.economicBreakdown?.customerTotal ?? job.agreedPrice ?? '--'} ${_payment?.currency ?? job.currency ?? 'MXN'}\n\nEl pago se confirmará únicamente cuando Laravel reciba el resultado de Mercado Pago.',
         ),
         actions: [
           TextButton(
@@ -238,8 +238,19 @@ class _Summary extends StatelessWidget {
             Text('Profesional: ${job.professional!.name}'),
           const Divider(),
           Text(
-            'Total: \$${payment?.grossAmount ?? job.agreedPrice ?? '--'} ${payment?.currency ?? job.currency ?? 'MXN'}',
+            'Precio base: \$${payment?.baseAmount ?? job.economicBreakdown?.baseAmount ?? job.agreedPrice ?? '--'} ${payment?.currency ?? job.currency ?? 'MXN'}',
+          ),
+          if (payment?.clientServiceFee != null ||
+              job.economicBreakdown?.clientServiceFee != null)
+            Text(
+              'Cargo de servicio Chambapp (${payment?.clientServiceFeePercent ?? job.economicBreakdown?.clientServiceFeePercent}%): +\$${payment?.clientServiceFee ?? job.economicBreakdown?.clientServiceFee}',
+            ),
+          Text(
+            'Total: \$${payment?.customerTotal ?? job.economicBreakdown?.customerTotal ?? payment?.grossAmount ?? job.agreedPrice ?? '--'} ${payment?.currency ?? job.currency ?? 'MXN'}',
             style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+          ),
+          const Text(
+            'El cargo Chambapp es un cargo de servicio, no un impuesto.',
           ),
           const Text('Pago procesado de forma segura por Mercado Pago.'),
         ],

@@ -5,6 +5,27 @@ import 'package:chambapp_mobile/features/professional/domain/professional_models
 import 'package:chambapp_mobile/features/professional/domain/professional_repositories.dart';
 import 'package:dio/dio.dart';
 
+final class ApiIdentityVerificationRepository
+    implements IdentityVerificationRepository {
+  ApiIdentityVerificationRepository(this._dio, this._errors);
+  final Dio _dio;
+  final ApiErrorMapper _errors;
+
+  @override
+  Future<IdentityVerificationModel> getStatus() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/professional/identity-verification',
+      );
+      return IdentityVerificationModel.fromJson(
+        jsonMap(response.data?['data']),
+      );
+    } catch (error) {
+      throw _errors.map(error);
+    }
+  }
+}
+
 final class ApiProfessionalProfileRepository
     implements ProfessionalProfileRepository {
   ApiProfessionalProfileRepository(this._dio, this._errors);

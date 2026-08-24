@@ -74,6 +74,7 @@ class _ProfessionalHomeScreenState extends ConsumerState<ProfessionalHomeScreen>
   Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).user!;
     final profile = ref.watch(professionalProfileProvider);
+    final identityVerification = ref.watch(identityVerificationProvider);
     final availability = ref.watch(availabilityProvider);
     final services = ref.watch(professionalServicesProvider);
     final invitations = ref.watch(jobInvitationsProvider);
@@ -81,6 +82,7 @@ class _ProfessionalHomeScreenState extends ConsumerState<ProfessionalHomeScreen>
 
     Future<void> refresh() async {
       ref.invalidate(professionalProfileProvider);
+      ref.invalidate(identityVerificationProvider);
       ref.invalidate(availabilityProvider);
       ref.invalidate(professionalServicesProvider);
       ref.invalidate(jobInvitationsProvider);
@@ -109,6 +111,32 @@ class _ProfessionalHomeScreenState extends ConsumerState<ProfessionalHomeScreen>
                 error: (_, _) => _Header(name: user.name),
                 data: (value) =>
                     _Header(name: value.name, avatarUrl: value.avatarUrl),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              identityVerification.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+                data: (identity) => Card(
+                  child: ListTile(
+                    leading: Icon(
+                      identity.identityVerified
+                          ? Icons.verified_user
+                          : Icons.badge_outlined,
+                      color: identity.identityVerified
+                          ? AppColors.success
+                          : AppColors.amberDark,
+                    ),
+                    title: Text(identity.status.label),
+                    subtitle: Text(
+                      identity.isRequired && !identity.canAcceptJobs
+                          ? 'Necesitas verificar tu identidad antes de aceptar trabajos.'
+                          : 'Consulta el alcance y estado de tu identidad.',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () =>
+                        context.push('/professional/identity-verification'),
+                  ),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               availability.when(

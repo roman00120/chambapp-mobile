@@ -91,7 +91,8 @@ final class ProfessionalModel {
         rating: jsonDouble(json['rating']),
         totalReviews: jsonInt(json['total_reviews']),
         completedJobs: jsonInt(json['completed_jobs']),
-        verified: json['verified'] == true,
+        // Never infer identity from the legacy profile-review flag.
+        verified: json['identity_verified'] == true,
         services: jsonList(json['services'])
             .map(ServiceModel.fromJson)
             .toList(),

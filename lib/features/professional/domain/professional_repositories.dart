@@ -8,6 +8,10 @@ abstract interface class ProfessionalProfileRepository {
   );
 }
 
+abstract interface class IdentityVerificationRepository {
+  Future<IdentityVerificationModel> getStatus();
+}
+
 abstract interface class AvailabilityRepository {
   Future<AvailabilityModel> getAvailability();
   Future<AvailabilityModel> updateAvailability({

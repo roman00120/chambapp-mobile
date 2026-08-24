@@ -3,10 +3,10 @@ import 'package:chambapp_mobile/features/catalog/domain/catalog_models.dart';
 import 'package:chambapp_mobile/features/jobs/domain/job_models.dart';
 
 enum ProfessionalVerification {
-  unverified('unverified', 'No verificado'),
-  pending('pending', 'Pendiente'),
-  verified('verified', 'Verificado'),
-  rejected('rejected', 'Rechazado'),
+  unverified('unverified', 'Perfil sin revisar'),
+  pending('pending', 'Revisión de perfil pendiente'),
+  verified('verified', 'Perfil habilitado'),
+  rejected('rejected', 'Perfil rechazado'),
   unknown('unknown', 'No disponible');
 
   const ProfessionalVerification(this.apiValue, this.label);
@@ -17,6 +17,68 @@ enum ProfessionalVerification {
     (item) => item.apiValue == value,
     orElse: () => unknown,
   );
+}
+
+enum IdentityVerificationStatus {
+  notStarted('not_started', 'No iniciada'),
+  pending('pending', 'En revisión'),
+  verified('verified', 'Identidad verificada'),
+  rejected('rejected', 'No aprobada'),
+  needsReview('needs_review', 'Revisión necesaria'),
+  expired('expired', 'Vencida'),
+  unknown('unknown', 'No disponible');
+
+  const IdentityVerificationStatus(this.apiValue, this.label);
+  final String apiValue;
+  final String label;
+
+  static IdentityVerificationStatus fromApi(Object? value) => values.firstWhere(
+    (item) => item.apiValue == value,
+    orElse: () => unknown,
+  );
+}
+
+final class IdentityVerificationModel {
+  const IdentityVerificationModel({
+    required this.status,
+    required this.isRequired,
+    required this.identityVerified,
+    required this.canAcceptJobs,
+    required this.canStartVerification,
+    required this.documentsStoredByChambapp,
+    this.provider,
+    this.submittedAt,
+    this.verifiedAt,
+    this.expiresAt,
+    this.message,
+  });
+
+  final IdentityVerificationStatus status;
+  final bool isRequired;
+  final bool identityVerified;
+  final bool canAcceptJobs;
+  final bool canStartVerification;
+  final bool documentsStoredByChambapp;
+  final String? provider;
+  final DateTime? submittedAt;
+  final DateTime? verifiedAt;
+  final DateTime? expiresAt;
+  final String? message;
+
+  factory IdentityVerificationModel.fromJson(Map<String, dynamic> json) =>
+      IdentityVerificationModel(
+        status: IdentityVerificationStatus.fromApi(json['status']),
+        isRequired: json['is_required'] == true,
+        identityVerified: json['identity_verified'] == true,
+        canAcceptJobs: json['can_accept_jobs'] == true,
+        canStartVerification: json['can_start_verification'] == true,
+        documentsStoredByChambapp: json['documents_stored_by_chambapp'] == true,
+        provider: json['provider']?.toString(),
+        submittedAt: DateTime.tryParse(json['submitted_at']?.toString() ?? ''),
+        verifiedAt: DateTime.tryParse(json['verified_at']?.toString() ?? ''),
+        expiresAt: DateTime.tryParse(json['expires_at']?.toString() ?? ''),
+        message: json['message']?.toString(),
+      );
 }
 
 enum AvailabilityStatus {

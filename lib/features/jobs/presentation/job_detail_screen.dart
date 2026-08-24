@@ -627,9 +627,18 @@ class _QuoteCard extends StatelessWidget {
           ),
           if (job.professional != null) Text(job.professional!.name),
           Text(
-            '\$${quote.amount} ${quote.currency}',
+            'Precio base: \$${quote.economicBreakdown?.baseAmount ?? quote.amount} ${quote.currency}',
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
           ),
+          if (quote.economicBreakdown?.clientServiceFee != null) ...[
+            Text(
+              'Cargo de servicio Chambapp (${quote.economicBreakdown!.clientServiceFeePercent}%): +\$${quote.economicBreakdown!.clientServiceFee}',
+            ),
+            Text(
+              'Total: \$${quote.economicBreakdown!.customerTotal} ${quote.currency}',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ],
           Text(quote.description),
           const SizedBox(height: AppSpacing.md),
           Row(
@@ -672,16 +681,22 @@ class _ProfessionalPayment extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           _Detail(
-            label: 'Precio',
-            value: '\$${payment.grossAmount} ${payment.currency}',
+            label: 'Precio base',
+            value:
+                '\$${payment.baseAmount ?? payment.grossAmount} ${payment.currency}',
           ),
           _Detail(
-            label: 'Comisión',
-            value: '${payment.platformFeePercent}% · \$${payment.platformFee}',
+            label: 'Comisión Chambapp',
+            value:
+                '${payment.professionalCommissionPercent ?? payment.platformFeePercent}% · \$${payment.professionalCommission ?? payment.platformFee}',
           ),
           _Detail(
-            label: 'Monto profesional',
-            value: '\$${payment.professionalAmount} ${payment.currency}',
+            label: 'Monto estimado',
+            value:
+                '\$${payment.professionalAmountBeforeExternalCosts ?? payment.professionalAmount} ${payment.currency}',
+          ),
+          const Text(
+            'Antes de impuestos, retenciones y costos externos aplicables.',
           ),
         ],
       ),
