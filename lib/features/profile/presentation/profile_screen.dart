@@ -97,6 +97,19 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
+            Card(
+              child: ListTile(
+                leading: const Icon(
+                  Icons.shield_outlined,
+                  color: AppColors.navy,
+                ),
+                title: const Text('Seguridad y Reportes'),
+                subtitle: const Text('Mis reportes, estado de cuenta y avisos'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/security'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
             if (user.canActAsProfessional) ...[
               Card(
                 child: ListTile(

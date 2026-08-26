@@ -22,6 +22,7 @@ import 'package:chambapp_mobile/features/jobs/presentation/scheduled_job_screen.
 import 'package:chambapp_mobile/features/jobs/presentation/searching_job_screen.dart';
 import 'package:chambapp_mobile/features/navigation/presentation/client_shell.dart';
 import 'package:chambapp_mobile/features/notifications/presentation/notifications_screen.dart';
+import 'package:chambapp_mobile/features/reports/presentation/security_center_screen.dart';
 import 'package:chambapp_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:chambapp_mobile/features/professional/domain/professional_models.dart';
 import 'package:chambapp_mobile/features/professional/presentation/availability_screen.dart';
@@ -335,6 +336,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         builder: (_, _) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/security',
+        builder: (_, _) => const SecurityCenterScreen(),
       ),
     ],
   );

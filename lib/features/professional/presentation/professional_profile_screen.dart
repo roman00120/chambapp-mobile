@@ -146,6 +146,12 @@ class ProfessionalProfileScreen extends ConsumerWidget {
                   icon: const Icon(Icons.edit_outlined),
                   label: const Text('Editar perfil'),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                OutlinedButton.icon(
+                  onPressed: () => context.push('/security'),
+                  icon: const Icon(Icons.shield_outlined),
+                  label: const Text('Seguridad y Reportes'),
+                ),
                 if (auth.user?.canActAsClient == true) ...[
                   const SizedBox(height: AppSpacing.md),
                   OutlinedButton.icon(
