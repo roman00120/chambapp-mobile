@@ -159,7 +159,7 @@ final class ProfessionalProfileModel {
       ProfessionalProfileModel(
         id: jsonInt(json['id']),
         name: json['name']?.toString() ?? 'Profesional',
-        avatarUrl: json['avatar']?.toString(),
+        avatarUrl: (json['avatar'] ?? json['profile_photo_url'])?.toString(),
         bio: json['bio']?.toString(),
         experienceYears: json['experience_years'] == null
             ? null

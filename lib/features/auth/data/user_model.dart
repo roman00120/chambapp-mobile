@@ -10,7 +10,7 @@ final class UserModel {
         role: UserRole.fromApi(json['role']),
         email: json['email']?.toString() ?? fallbackEmail,
         phone: json['phone']?.toString(),
-        avatarUrl: json['avatar']?.toString(),
+        avatarUrl: (json['avatar'] ?? json['profile_photo_url'])?.toString(),
         status: json['status']?.toString(),
         emailVerified: json['email_verified'] is bool
             ? json['email_verified'] as bool

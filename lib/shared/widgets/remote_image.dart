@@ -27,9 +27,15 @@ class RemoteImage extends StatelessWidget {
         size: 34,
       ),
     );
-    final image = url?.isNotEmpty == true
+    final cleanUrl = url?.trim();
+    final hasValidUrl =
+        cleanUrl != null &&
+        cleanUrl.isNotEmpty &&
+        (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://'));
+
+    final image = hasValidUrl
         ? Image.network(
-            url!,
+            cleanUrl,
             width: width,
             height: height,
             fit: BoxFit.cover,
