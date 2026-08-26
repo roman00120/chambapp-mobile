@@ -10,6 +10,8 @@ abstract interface class ProfessionalProfileRepository {
 
 abstract interface class IdentityVerificationRepository {
   Future<IdentityVerificationModel> getStatus();
+  Future<IdentityVerificationStart> start();
+  Future<IdentityVerificationModel> sync();
 }
 
 abstract interface class AvailabilityRepository {

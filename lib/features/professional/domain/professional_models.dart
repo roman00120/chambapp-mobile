@@ -50,6 +50,7 @@ final class IdentityVerificationModel {
     this.submittedAt,
     this.verifiedAt,
     this.expiresAt,
+    this.lastProviderSyncAt,
     this.message,
   });
 
@@ -63,6 +64,7 @@ final class IdentityVerificationModel {
   final DateTime? submittedAt;
   final DateTime? verifiedAt;
   final DateTime? expiresAt;
+  final DateTime? lastProviderSyncAt;
   final String? message;
 
   factory IdentityVerificationModel.fromJson(Map<String, dynamic> json) =>
@@ -77,8 +79,30 @@ final class IdentityVerificationModel {
         submittedAt: DateTime.tryParse(json['submitted_at']?.toString() ?? ''),
         verifiedAt: DateTime.tryParse(json['verified_at']?.toString() ?? ''),
         expiresAt: DateTime.tryParse(json['expires_at']?.toString() ?? ''),
+        lastProviderSyncAt: DateTime.tryParse(
+          json['last_provider_sync_at']?.toString() ?? '',
+        ),
         message: json['message']?.toString(),
       );
+}
+
+final class IdentityVerificationStart {
+  const IdentityVerificationStart({required this.url, required this.status});
+
+  final Uri url;
+  final IdentityVerificationStatus status;
+
+  factory IdentityVerificationStart.fromJson(Map<String, dynamic> json) {
+    final url = Uri.tryParse(json['verification_url']?.toString() ?? '');
+    if (url == null || url.scheme != 'https') {
+      throw const FormatException('La URL de verificación no es válida.');
+    }
+
+    return IdentityVerificationStart(
+      url: url,
+      status: IdentityVerificationStatus.fromApi(json['status']),
+    );
+  }
 }
 
 enum AvailabilityStatus {

@@ -35,6 +35,23 @@ void main() {
     expect(model.canAcceptJobs, isTrue);
   });
 
+  test('parses only an HTTPS hosted verification URL', () {
+    final start = IdentityVerificationStart.fromJson({
+      'verification_url': 'https://verify.didit.me/session/test-token',
+      'status': 'pending',
+    });
+
+    expect(start.url.host, 'verify.didit.me');
+    expect(start.status, IdentityVerificationStatus.pending);
+    expect(
+      () => IdentityVerificationStart.fromJson({
+        'verification_url': 'http://example.test/session',
+        'status': 'pending',
+      }),
+      throwsFormatException,
+    );
+  });
+
   test('legacy professional verification is labelled as profile review', () {
     expect(ProfessionalVerification.verified.label, 'Perfil habilitado');
   });

@@ -24,6 +24,35 @@ final class ApiIdentityVerificationRepository
       throw _errors.map(error);
     }
   }
+
+  @override
+  Future<IdentityVerificationStart> start() async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/professional/identity-verification/start',
+        data: {'identity_consent': true},
+      );
+      return IdentityVerificationStart.fromJson(
+        jsonMap(response.data?['data']),
+      );
+    } catch (error) {
+      throw _errors.map(error);
+    }
+  }
+
+  @override
+  Future<IdentityVerificationModel> sync() async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/professional/identity-verification/sync',
+      );
+      return IdentityVerificationModel.fromJson(
+        jsonMap(response.data?['data']),
+      );
+    } catch (error) {
+      throw _errors.map(error);
+    }
+  }
 }
 
 final class ApiProfessionalProfileRepository
