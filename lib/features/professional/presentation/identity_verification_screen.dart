@@ -78,8 +78,7 @@ class _IdentityVerificationScreenState
     } catch (_) {
       if (mounted) {
         setState(() {
-          _actionMessage =
-              'No pudimos iniciar la verificación. Inténtalo nuevamente más tarde.';
+          _actionMessage = 'No pudimos iniciar la verificación. Inténtalo nuevamente más tarde.';
         });
       }
     } finally {
