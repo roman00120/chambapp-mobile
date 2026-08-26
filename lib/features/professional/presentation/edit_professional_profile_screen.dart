@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chambapp_mobile/app/providers.dart';
 import 'package:chambapp_mobile/core/errors/app_exception.dart';
 import 'package:chambapp_mobile/core/theme/app_tokens.dart';
@@ -5,6 +7,8 @@ import 'package:chambapp_mobile/features/professional/domain/professional_models
 import 'package:chambapp_mobile/features/professional/presentation/professional_providers.dart';
 import 'package:chambapp_mobile/shared/widgets/app_text_field.dart';
 import 'package:chambapp_mobile/shared/widgets/primary_button.dart';
+import 'package:chambapp_mobile/shared/widgets/remote_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,6 +53,82 @@ class _EditProfessionalProfileScreenState
     super.dispose();
   }
 
+  Widget _buildAvatarPreview(ProfessionalProfileModel value) {
+    Widget avatarContent;
+    if (_photo != null) {
+      avatarContent = kIsWeb
+          ? Image.network(
+              _photo!.path,
+              width: 96,
+              height: 96,
+              fit: BoxFit.cover,
+            )
+          : Image.file(
+              File(_photo!.path),
+              width: 96,
+              height: 96,
+              fit: BoxFit.cover,
+            );
+    } else if (value.avatarUrl != null && value.avatarUrl!.trim().isNotEmpty) {
+      avatarContent = RemoteImage(
+        url: value.avatarUrl,
+        width: 96,
+        height: 96,
+        borderRadius: BorderRadius.circular(48),
+      );
+    } else {
+      avatarContent = Container(
+        width: 96,
+        height: 96,
+        decoration: BoxDecoration(
+          color: AppColors.navy.withValues(alpha: .08),
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          value.name.isNotEmpty
+              ? value.name.substring(0, 1).toUpperCase()
+              : 'P',
+          style: const TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: AppColors.navy,
+          ),
+        ),
+      );
+    }
+
+    return Center(
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(48),
+            child: SizedBox(width: 96, height: 96, child: avatarContent),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: InkWell(
+              onTap: _submitting ? null : _pickPhoto,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: AppColors.amber,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(professionalProfileProvider);
@@ -77,16 +157,26 @@ class _EditProfessionalProfileScreenState
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.all(AppSpacing.md),
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: _submitting ? null : _pickPhoto,
-                      icon: const Icon(Icons.photo_camera_outlined),
-                      label: Text(
-                        _photo == null
-                            ? 'Cambiar foto de perfil'
-                            : _photo!.name,
+                    _buildAvatarPreview(value),
+                    const SizedBox(height: AppSpacing.sm),
+                    Center(
+                      child: OutlinedButton.icon(
+                        onPressed: _submitting ? null : _pickPhoto,
+                        icon: const Icon(Icons.photo_camera_outlined),
+                        label: Text(
+                          _photo == null
+                              ? 'Cambiar foto de perfil'
+                              : _photo!.name,
+                        ),
                       ),
                     ),
-                    const Text('JPEG, PNG o WebP. Máximo 2 MB.'),
+                    const SizedBox(height: AppSpacing.xs),
+                    const Center(
+                      child: Text(
+                        'JPEG, PNG o WebP. Máximo 2 MB.',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     AppTextField(
                       controller: _name,
