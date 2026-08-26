@@ -45,7 +45,7 @@ class CategoryGrid extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _CategoryIcon(value: category.icon),
+                      _CategoryIcon(value: category.icon, slug: category.slug),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         category.name,
@@ -67,8 +67,54 @@ class CategoryGrid extends StatelessWidget {
 }
 
 class _CategoryIcon extends StatelessWidget {
-  const _CategoryIcon({this.value});
+  const _CategoryIcon({this.value, this.slug});
   final String? value;
+  final String? slug;
+
+  static IconData _resolveIcon(String? icon, String? slug) {
+    final key =
+        (icon?.toLowerCase().trim() ?? slug?.toLowerCase().trim() ?? '');
+    return switch (key) {
+      'lightning-charge' ||
+      'lightning' ||
+      'bolt' ||
+      'electricidad' => Icons.electric_bolt_outlined,
+      'stars' || 'sparkles' || 'limpieza' => Icons.cleaning_services_outlined,
+      'hammer' || 'carpinteria' => Icons.carpenter_outlined,
+      'building' || 'construccion' => Icons.apartment_outlined,
+      'car-front' ||
+      'car-front-fill' ||
+      'mecanica' ||
+      'autolavado-y-detallado-automotriz' => Icons.directions_car_outlined,
+      'droplet' || 'plomeria' => Icons.water_drop_outlined,
+      'brush' || 'pintura' => Icons.format_paint_outlined,
+      'wind' || 'aires-acondicionados' => Icons.air_outlined,
+      'key' || 'cerrajeria' => Icons.vpn_key_outlined,
+      'plug' || 'reparacion-electrodomesticos' => Icons.power_outlined,
+      'heart-pulse' || 'enfermeria' => Icons.medical_services_outlined,
+      'truck' || 'mudanzas' => Icons.local_shipping_outlined,
+      'flower1' || 'jardineria' => Icons.yard_outlined,
+      'pc-display' || 'informatica-mantenimiento-pc' => Icons.computer_outlined,
+      'umbrella' || 'impermeabilizacion' => Icons.umbrella_outlined,
+      'bricks' || 'demolicion' => Icons.foundation_outlined,
+      'person-hearts' ||
+      'cosmetica-y-estetica' => Icons.face_retouching_natural_outlined,
+      'scissors' || 'costura' => Icons.content_cut_outlined,
+      'wrench-adjustable' || 'herreria' => Icons.build_outlined,
+      'window' || 'vidrieria' => Icons.window_outlined,
+      'music-note-beamed' ||
+      'mariachis-grupo-musical' => Icons.music_note_outlined,
+      'cake2' || 'banquetes' => Icons.cake_outlined,
+      'mic' || 'animacion-y-conduccion' => Icons.mic_outlined,
+      'house-gear' || 'restauracion-de-inmuebles' => Icons.home_work_outlined,
+      'tools' || 'restauracion-de-bienes' => Icons.home_repair_service_outlined,
+      'pen' || 'tatuaje-y-perforacion' => Icons.edit_outlined,
+      'egg-fried' || 'cocina' => Icons.restaurant_outlined,
+      'basket' || 'lavanderia' => Icons.local_laundry_service_outlined,
+      'activity' || 'entrenamiento-personal' => Icons.fitness_center_outlined,
+      _ => Icons.handyman_outlined,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,12 +124,15 @@ class _CategoryIcon extends StatelessWidget {
         value!,
         width: 34,
         height: 34,
-        errorBuilder: (_, _, _) =>
-            const Icon(Icons.handyman_outlined, size: 34),
+        errorBuilder: (_, _, _) => Icon(
+          _resolveIcon(value, slug),
+          size: 34,
+          color: AppColors.amberDark,
+        ),
       );
     }
-    return const Icon(
-      Icons.handyman_outlined,
+    return Icon(
+      _resolveIcon(value, slug),
       size: 34,
       color: AppColors.amberDark,
     );
