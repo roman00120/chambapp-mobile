@@ -127,6 +127,44 @@ class ProfessionalProfileScreen extends ConsumerWidget {
                     icon: const Icon(Icons.star_outline),
                     label: const Text('Ver mis reseñas'),
                   ),
+                if (value.achievements.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Reconocimientos y Medallas',
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ...value.achievements.map(
+                    (ach) => Card(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: ListTile(
+                        leading: const Icon(
+                          Icons.military_tech,
+                          color: AppColors.amberDark,
+                          size: 32,
+                        ),
+                        title: Text(
+                          ach.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(ach.description),
+                        trailing: Chip(
+                          label: Text(
+                            ach.levelLabel,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          backgroundColor: AppColors.amber.withValues(
+                            alpha: 0.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 if (value.bio?.isNotEmpty != true ||
                     value.generalLocation.isEmpty) ...[
                   const SizedBox(height: AppSpacing.lg),

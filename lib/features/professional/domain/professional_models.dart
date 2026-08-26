@@ -1,4 +1,5 @@
 import 'package:chambapp_mobile/core/network/json_helpers.dart';
+import 'package:chambapp_mobile/features/achievements/domain/achievement_model.dart';
 import 'package:chambapp_mobile/features/catalog/domain/catalog_models.dart';
 import 'package:chambapp_mobile/features/jobs/domain/job_models.dart';
 
@@ -124,6 +125,7 @@ final class ProfessionalProfileModel {
     required this.completedJobs,
     required this.verification,
     required this.isAvailable,
+    this.achievements = const [],
     this.avatarUrl,
     this.bio,
     this.experienceYears,
@@ -148,6 +150,7 @@ final class ProfessionalProfileModel {
   final int completedJobs;
   final ProfessionalVerification verification;
   final bool isAvailable;
+  final List<AchievementModel> achievements;
   final String? availabilityStatus;
   final int? serviceRadiusKm;
   final DateTime? locationUpdatedAt;
@@ -155,33 +158,37 @@ final class ProfessionalProfileModel {
   String get generalLocation =>
       [city, state].where((value) => value?.isNotEmpty == true).join(', ');
 
-  factory ProfessionalProfileModel.fromJson(Map<String, dynamic> json) =>
-      ProfessionalProfileModel(
-        id: jsonInt(json['id']),
-        name: json['name']?.toString() ?? 'Profesional',
-        avatarUrl: (json['avatar'] ?? json['profile_photo_url'])?.toString(),
-        bio: json['bio']?.toString(),
-        experienceYears: json['experience_years'] == null
-            ? null
-            : jsonInt(json['experience_years']),
-        city: json['city']?.toString(),
-        state: json['state']?.toString(),
-        postalCode: json['postal_code']?.toString(),
-        rating: jsonDouble(json['rating']),
-        totalReviews: jsonInt(json['total_reviews']),
-        completedJobs: jsonInt(json['completed_jobs']),
-        verification: ProfessionalVerification.fromApi(
-          json['verification_status'],
-        ),
-        isAvailable: json['is_available'] == true,
-        availabilityStatus: json['availability_status']?.toString(),
-        serviceRadiusKm: json['service_radius_km'] == null
-            ? null
-            : jsonInt(json['service_radius_km']),
-        locationUpdatedAt: DateTime.tryParse(
-          json['location_updated_at']?.toString() ?? '',
-        ),
-      );
+  factory ProfessionalProfileModel.fromJson(
+    Map<String, dynamic> json,
+  ) => ProfessionalProfileModel(
+    id: jsonInt(json['id']),
+    name: json['name']?.toString() ?? 'Profesional',
+    avatarUrl: (json['avatar'] ?? json['profile_photo_url'])?.toString(),
+    bio: json['bio']?.toString(),
+    experienceYears: json['experience_years'] == null
+        ? null
+        : jsonInt(json['experience_years']),
+    city: json['city']?.toString(),
+    state: json['state']?.toString(),
+    postalCode: json['postal_code']?.toString(),
+    rating: jsonDouble(json['rating']),
+    totalReviews: jsonInt(json['total_reviews']),
+    completedJobs: jsonInt(json['completed_jobs']),
+    verification: ProfessionalVerification.fromApi(json['verification_status']),
+    isAvailable: json['is_available'] == true,
+    achievements:
+        (json['achievements'] as List<dynamic>?)
+            ?.map((e) => AchievementModel.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        const [],
+    availabilityStatus: json['availability_status']?.toString(),
+    serviceRadiusKm: json['service_radius_km'] == null
+        ? null
+        : jsonInt(json['service_radius_km']),
+    locationUpdatedAt: DateTime.tryParse(
+      json['location_updated_at']?.toString() ?? '',
+    ),
+  );
 }
 
 final class AvailabilityModel {
