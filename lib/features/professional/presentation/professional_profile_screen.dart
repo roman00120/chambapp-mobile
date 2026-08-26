@@ -146,6 +146,27 @@ class ProfessionalProfileScreen extends ConsumerWidget {
                   icon: const Icon(Icons.edit_outlined),
                   label: const Text('Editar perfil'),
                 ),
+                if (auth.user?.canActAsClient == true) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(authControllerProvider.notifier)
+                          .switchActiveMode('client');
+                      context.go('/client/home');
+                    },
+                    icon: const Icon(Icons.swap_horiz),
+                    label: const Text('Cambiar a modo cliente'),
+                  ),
+                ],
+                if (auth.user?.isAdmin == true) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/admin/home'),
+                    icon: const Icon(Icons.shield_outlined),
+                    label: const Text('Panel de administración'),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.md),
                 PrimaryButton(
                   key: const Key('logout_button'),

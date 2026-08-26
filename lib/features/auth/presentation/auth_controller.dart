@@ -142,4 +142,10 @@ final class AuthController extends Notifier<AuthState> {
 
   void clearFeedback() =>
       state = state.copyWith(clearMessage: true, fieldErrors: const {});
+
+  void switchActiveMode(String mode) {
+    if (state.user == null) return;
+    final updatedUser = state.user!.copyWith(activeMode: mode);
+    state = state.copyWith(user: updatedUser);
+  }
 }

@@ -97,6 +97,43 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
+            if (user.canActAsProfessional) ...[
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.swap_horiz, color: AppColors.navy),
+                  title: const Text(
+                    'Cambiar a modo profesional',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text('Ver solicitudes, servicios y pagos'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    ref
+                        .read(authControllerProvider.notifier)
+                        .switchActiveMode('professional');
+                    context.go('/professional/home');
+                  },
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+            if (user.isAdmin) ...[
+              Card(
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.shield_outlined,
+                    color: Colors.amber,
+                  ),
+                  title: const Text(
+                    'Panel de administración',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go('/admin/home'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
             PrimaryButton(
               key: const Key('logout_button'),
               label: 'Cerrar sesión',

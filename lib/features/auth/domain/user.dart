@@ -21,6 +21,8 @@ final class User {
     required this.id,
     required this.name,
     required this.role,
+    this.capabilities = const [],
+    this.activeMode,
     this.email,
     this.phone,
     this.avatarUrl,
@@ -31,16 +33,36 @@ final class User {
   final int id;
   final String name;
   final UserRole role;
+  final List<String> capabilities;
+  final String? activeMode;
   final String? email;
   final String? phone;
   final String? avatarUrl;
   final String? status;
   final bool? emailVerified;
 
-  User copyWith({String? email}) => User(
+  bool get canActAsClient =>
+      capabilities.contains('client') ||
+      role == UserRole.client ||
+      role == UserRole.admin;
+
+  bool get canActAsProfessional =>
+      capabilities.contains('professional') ||
+      role == UserRole.professional ||
+      role == UserRole.admin;
+
+  bool get isAdmin => role == UserRole.admin || capabilities.contains('admin');
+
+  User copyWith({
+    String? email,
+    String? activeMode,
+    List<String>? capabilities,
+  }) => User(
     id: id,
     name: name,
     role: role,
+    capabilities: capabilities ?? this.capabilities,
+    activeMode: activeMode ?? this.activeMode,
     email: email ?? this.email,
     phone: phone,
     avatarUrl: avatarUrl,

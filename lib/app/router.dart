@@ -41,7 +41,15 @@ import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(
-    authControllerProvider.select((state) => (state.status, state.user?.role)),
+    authControllerProvider.select(
+      (state) => (
+        state.status,
+        state.user?.role,
+        state.user?.activeMode,
+        state.user?.canActAsClient ?? false,
+        state.user?.canActAsProfessional ?? false,
+      ),
+    ),
   );
   return GoRouter(
     initialLocation: '/splash',
@@ -55,25 +63,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         return onAuthPage ? null : '/login';
       }
       final role = auth.$2;
-      final client = role == UserRole.client;
-      final admin = role == UserRole.admin;
+      final activeMode = auth.$3;
+      final canClient = auth.$4;
+      final canPro = auth.$5;
+      final isProMode =
+          activeMode == 'professional' ||
+          (role == UserRole.professional && activeMode != 'client');
+      final client = !isProMode && canClient;
+      final admin = role == UserRole.admin && activeMode == null;
       if (path == '/splash' || onAuthPage) {
         return admin
             ? '/admin/home'
-            : client
-            ? '/client/home'
-            : '/professional/home';
+            : isProMode
+            ? '/professional/home'
+            : '/client/home';
       }
-      if (admin) return path.startsWith('/admin') ? null : '/admin/home';
-      if (path.startsWith('/admin')) {
+      if (role == UserRole.admin && path.startsWith('/admin')) return null;
+      if (path.startsWith('/admin') && role != UserRole.admin) {
         return client ? '/client/home' : '/professional/home';
       }
       if (client && path == '/home') return '/client/home';
       if (!client && path == '/home') return '/professional/home';
       if (client && path == '/profile') return '/client/profile';
       if (!client && path == '/profile') return '/professional/profile';
-      if (client && path.startsWith('/professional')) return '/client/home';
-      if (!client && path.startsWith('/client')) return '/professional/home';
+      if (client && path.startsWith('/professional') && !canPro) {
+        return '/client/home';
+      }
+      if (!client && path.startsWith('/client') && !canClient) {
+        return '/professional/home';
+      }
       if (client && path.endsWith('/quote')) return '/client/home';
       if (!client && path.endsWith('/checkout')) return '/professional/home';
       if (!client && path.endsWith('/dispute')) return '/professional/home';
