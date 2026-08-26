@@ -4,6 +4,7 @@ abstract interface class AuthRepository {
   Future<AuthSession> login({required String email, required String password});
   Future<AuthSession> loginWithGoogle({required String idToken});
   Future<AuthSession> register(RegistrationInput input);
+  Future<RegistrationRequirements> registrationRequirements(UserRole role);
   Future<User?> restoreSession();
   Future<User> me();
   Future<void> logout();

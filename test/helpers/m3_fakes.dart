@@ -7,6 +7,8 @@ import 'package:chambapp_mobile/features/location/domain/location_service.dart';
 import 'package:chambapp_mobile/features/professional/domain/professional_models.dart';
 import 'package:chambapp_mobile/features/professional/domain/professional_repositories.dart';
 
+import 'fakes.dart';
+
 const professionalUser = User(
   id: 20,
   name: 'Carlos Ramírez',
@@ -79,6 +81,10 @@ const professionalJob = JobModel(
 );
 
 final class FakeProfessionalAuthRepository implements AuthRepository {
+  @override
+  Future<RegistrationRequirements> registrationRequirements(
+    UserRole role,
+  ) async => testRegistrationRequirements;
   @override
   Future<AuthSession> loginWithGoogle({required String idToken}) async =>
       professionalSession;

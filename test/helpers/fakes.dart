@@ -45,6 +45,8 @@ final class FakeRemoteDataSource implements AuthRemoteDataSource {
   User meResult = testUser;
   Object? error;
   bool logoutCalled = false;
+  RegistrationRequirements requirements = testRegistrationRequirements;
+  RegistrationRequirements? professionalRequirements;
 
   @override
   Future<AuthSession> login({
@@ -68,6 +70,13 @@ final class FakeRemoteDataSource implements AuthRemoteDataSource {
   }
 
   @override
+  Future<RegistrationRequirements> registrationRequirements(
+    UserRole role,
+  ) async => role == UserRole.professional && professionalRequirements != null
+      ? professionalRequirements!
+      : requirements;
+
+  @override
   Future<User> me({String? fallbackEmail}) async {
     if (error != null) throw error!;
     return meResult.copyWith(email: fallbackEmail);
@@ -88,6 +97,9 @@ final class FakeRemoteDataSource implements AuthRemoteDataSource {
 final class FakeAuthRepository implements AuthRepository {
   Object? loginError;
   Completer<AuthSession>? loginCompleter;
+  RegistrationRequirements requirements = testRegistrationRequirements;
+  RegistrationRequirements? professionalRequirements;
+  RegistrationInput? lastRegistration;
 
   @override
   Future<AuthSession> login({required String email, required String password}) {
@@ -100,7 +112,17 @@ final class FakeAuthRepository implements AuthRepository {
       testSession;
 
   @override
-  Future<AuthSession> register(RegistrationInput input) async => testSession;
+  Future<AuthSession> register(RegistrationInput input) async {
+    lastRegistration = input;
+    return testSession;
+  }
+
+  @override
+  Future<RegistrationRequirements> registrationRequirements(
+    UserRole role,
+  ) async => role == UserRole.professional && professionalRequirements != null
+      ? professionalRequirements!
+      : requirements;
 
   @override
   Future<User?> restoreSession() async => null;
@@ -117,3 +139,22 @@ final class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> clearLocalSession() async {}
 }
+
+final testRegistrationRequirements = RegistrationRequirements(
+  acceptanceRequired: true,
+  registrationAvailable: true,
+  documents: [
+    LegalDocument(
+      document: 'terms',
+      title: 'Términos y Condiciones',
+      version: '2026-08-26',
+      url: Uri.parse('https://chambapp.com.mx/terminos'),
+    ),
+    LegalDocument(
+      document: 'privacy',
+      title: 'Aviso de Privacidad',
+      version: '2026-08-26',
+      url: Uri.parse('https://chambapp.com.mx/privacidad'),
+    ),
+  ],
+);

@@ -63,6 +63,8 @@ final class RegistrationInput {
     required this.role,
     required this.password,
     required this.passwordConfirmation,
+    required this.legalAccepted,
+    required this.legalDocuments,
   });
 
   final String name;
@@ -71,4 +73,32 @@ final class RegistrationInput {
   final UserRole role;
   final String password;
   final String passwordConfirmation;
+  final bool legalAccepted;
+  final Map<String, String> legalDocuments;
+}
+
+final class LegalDocument {
+  const LegalDocument({
+    required this.document,
+    required this.title,
+    required this.version,
+    required this.url,
+  });
+
+  final String document;
+  final String title;
+  final String version;
+  final Uri url;
+}
+
+final class RegistrationRequirements {
+  const RegistrationRequirements({
+    required this.acceptanceRequired,
+    required this.registrationAvailable,
+    required this.documents,
+  });
+
+  final bool acceptanceRequired;
+  final bool registrationAvailable;
+  final List<LegalDocument> documents;
 }

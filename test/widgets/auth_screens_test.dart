@@ -5,6 +5,7 @@ import 'package:chambapp_mobile/core/errors/app_exception.dart';
 import 'package:chambapp_mobile/core/theme/app_theme.dart';
 import 'package:chambapp_mobile/features/auth/presentation/login_screen.dart';
 import 'package:chambapp_mobile/features/auth/presentation/register_screen.dart';
+import 'package:chambapp_mobile/features/auth/domain/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +16,23 @@ Widget _app(Widget child, FakeAuthRepository repository) => ProviderScope(
   overrides: [authRepositoryProvider.overrideWithValue(repository)],
   child: MaterialApp(theme: AppTheme.light, home: child),
 );
+
+Future<void> _fillRegistration(WidgetTester tester) async {
+  await tester.enterText(find.byKey(const Key('register_name')), 'Ana Legal');
+  await tester.enterText(
+    find.byKey(const Key('register_email')),
+    'ana.legal@example.test',
+  );
+  await tester.enterText(find.byKey(const Key('register_phone')), '5512345678');
+  await tester.enterText(
+    find.byKey(const Key('register_password')),
+    'Password123!',
+  );
+  await tester.enterText(
+    find.byKey(const Key('register_confirmation')),
+    'Password123!',
+  );
+}
 
 void main() {
   testWidgets('login renderiza sus campos y valida vacíos', (tester) async {
@@ -38,7 +56,68 @@ void main() {
     expect(find.text('Crear cuenta'), findsWidgets);
     expect(find.text('Quiero contratar servicios'), findsOneWidget);
     expect(find.text('Quiero ofrecer mis servicios'), findsOneWidget);
+    await tester.pumpAndSettle();
+    final checkbox = tester.widget<CheckboxListTile>(
+      find.byKey(const Key('legal_acceptance_checkbox')),
+    );
+    expect(checkbox.value, isFalse);
+    expect(find.byKey(const Key('legal_link_terms')), findsOneWidget);
+    expect(find.byKey(const Key('legal_link_privacy')), findsOneWidget);
   });
+
+  testWidgets('registro Flutter no permite continuar sin aceptación legal', (
+    tester,
+  ) async {
+    final repository = FakeAuthRepository();
+    await tester.pumpWidget(_app(const RegisterScreen(), repository));
+    await tester.pumpAndSettle();
+    await _fillRegistration(tester);
+    await tester.ensureVisible(find.byKey(const Key('register_submit')));
+    await tester.tap(find.byKey(const Key('register_submit')));
+    await tester.pump();
+
+    expect(find.byKey(const Key('legal_acceptance_error')), findsOneWidget);
+    expect(repository.lastRegistration, isNull);
+
+    await tester.tap(find.byKey(const Key('legal_acceptance_checkbox')));
+    await tester.tap(find.byKey(const Key('register_submit')));
+    await tester.pump();
+    expect(repository.lastRegistration?.legalAccepted, isTrue);
+    expect(repository.lastRegistration?.legalDocuments, {
+      'terms': '2026-08-26',
+      'privacy': '2026-08-26',
+    });
+  });
+
+  testWidgets(
+    'registro profesional muestra términos profesionales cuando aplican',
+    (tester) async {
+      final repository = FakeAuthRepository()
+        ..professionalRequirements = RegistrationRequirements(
+          acceptanceRequired: true,
+          registrationAvailable: true,
+          documents: [
+            ...testRegistrationRequirements.documents,
+            LegalDocument(
+              document: 'professional_terms',
+              title: 'Términos para Profesionales',
+              version: '2026-08-26',
+              url: Uri.parse('https://chambapp.com.mx/terminos-profesionales'),
+            ),
+          ],
+        );
+      await tester.pumpWidget(_app(const RegisterScreen(), repository));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('role_professional')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('legal_link_professional_terms')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Términos para Profesionales'), findsWidgets);
+    },
+  );
 
   testWidgets('login muestra loading mientras espera la API', (tester) async {
     final repository = FakeAuthRepository()..loginCompleter = Completer();

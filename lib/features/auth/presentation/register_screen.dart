@@ -8,6 +8,7 @@ import 'package:chambapp_mobile/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -24,6 +25,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
   UserRole _role = UserRole.client;
+  RegistrationRequirements? _requirements;
+  bool _requirementsLoading = true;
+  bool _legalAccepted = false;
+  String? _legalError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRequirements();
+  }
+
+  Future<void> _loadRequirements() async {
+    setState(() {
+      _requirementsLoading = true;
+      _legalAccepted = false;
+      _legalError = null;
+    });
+    try {
+      final requirements = await ref
+          .read(authRepositoryProvider)
+          .registrationRequirements(_role);
+      if (!mounted) return;
+      setState(() {
+        _requirements = requirements;
+        _requirementsLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _requirements = null;
+        _requirementsLoading = false;
+        _legalError = 'No pudimos cargar los documentos legales vigentes.';
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -43,6 +79,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     FocusScope.of(context).unfocus();
     ref.read(authControllerProvider.notifier).clearFeedback();
     if (!_formKey.currentState!.validate()) return;
+    final requirements = _requirements;
+    if (_requirementsLoading || requirements == null) {
+      setState(
+        () => _legalError = 'Espera a que carguen los documentos legales.',
+      );
+      return;
+    }
+    if (!requirements.registrationAvailable) {
+      setState(() => _legalError = 'El registro está temporalmente detenido.');
+      return;
+    }
+    if (requirements.acceptanceRequired && !_legalAccepted) {
+      setState(
+        () => _legalError =
+            'Debes leer y aceptar los documentos legales vigentes.',
+      );
+      return;
+    }
     final success = await ref
         .read(authControllerProvider.notifier)
         .register(
@@ -53,6 +107,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             role: _role,
             password: _password.text,
             passwordConfirmation: _confirmation.text,
+            legalAccepted: _legalAccepted,
+            legalDocuments: {
+              for (final document in requirements.documents)
+                document.document: document.version,
+            },
           ),
         );
     if (!success && mounted) {
@@ -101,7 +160,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       icon: Icons.search,
                       title: 'Quiero contratar servicios',
                       subtitle: 'Cuenta de cliente',
-                      onTap: () => setState(() => _role = UserRole.client),
+                      onTap: () {
+                        if (_role == UserRole.client) return;
+                        setState(() => _role = UserRole.client);
+                        _loadRequirements();
+                      },
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     _RoleOption(
@@ -110,8 +173,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       icon: Icons.handyman_outlined,
                       title: 'Quiero ofrecer mis servicios',
                       subtitle: 'Cuenta profesional',
-                      onTap: () =>
-                          setState(() => _role = UserRole.professional),
+                      onTap: () {
+                        if (_role == UserRole.professional) return;
+                        setState(() => _role = UserRole.professional);
+                        _loadRequirements();
+                      },
                     ),
                     if (errors['role'] != null)
                       Padding(
@@ -181,6 +247,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    if (_requirementsLoading)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_requirements != null &&
+                        !_requirements!.registrationAvailable)
+                      const Text(
+                        'El registro está temporalmente detenido hasta publicar los documentos legales definitivos.',
+                        key: Key('legal_registration_unavailable'),
+                        style: TextStyle(color: AppColors.danger),
+                      )
+                    else if (_requirements?.acceptanceRequired == true) ...[
+                      CheckboxListTile(
+                        key: const Key('legal_acceptance_checkbox'),
+                        value: _legalAccepted,
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text(
+                          _requirements!.documents.any(
+                                (item) => item.document == 'professional_terms',
+                              )
+                              ? 'He leído y acepto los Términos y Condiciones, el Aviso de Privacidad y los Términos para Profesionales.'
+                              : 'He leído y acepto los Términos y Condiciones y el Aviso de Privacidad.',
+                        ),
+                        onChanged: state.isSubmitting
+                            ? null
+                            : (value) => setState(() {
+                                _legalAccepted = value ?? false;
+                                _legalError = null;
+                              }),
+                      ),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        children: [
+                          for (final document in _requirements!.documents)
+                            TextButton(
+                              key: Key('legal_link_${document.document}'),
+                              onPressed: () => launchUrl(
+                                document.url,
+                                mode: LaunchMode.externalApplication,
+                              ),
+                              child: Text(document.title),
+                            ),
+                        ],
+                      ),
+                    ],
+                    if (_legalError != null || errors['legal_accepted'] != null)
+                      Text(
+                        _legalError ?? errors['legal_accepted']!,
+                        key: const Key('legal_acceptance_error'),
+                        style: const TextStyle(color: AppColors.danger),
+                      ),
                     if (state.message != null) ...[
                       const SizedBox(height: AppSpacing.md),
                       Text(
@@ -195,7 +312,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       key: const Key('register_submit'),
                       label: 'Crear cuenta',
                       isLoading: state.isSubmitting,
-                      onPressed: _submit,
+                      onPressed:
+                          _requirementsLoading ||
+                              (_requirements?.registrationAvailable == false)
+                          ? null
+                          : _submit,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     TextButton(

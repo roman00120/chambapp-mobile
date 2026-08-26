@@ -55,6 +55,17 @@ final class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<RegistrationRequirements> registrationRequirements(
+    UserRole role,
+  ) async {
+    try {
+      return await _remote.registrationRequirements(role);
+    } catch (error) {
+      throw _errors.map(error);
+    }
+  }
+
+  @override
   Future<User?> restoreSession() async {
     final token = await _storage.readToken();
     if (token == null || token.isEmpty) return null;
