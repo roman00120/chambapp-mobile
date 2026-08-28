@@ -5,10 +5,36 @@ enum LocationFailure {
   unavailable,
 }
 
+final class AppAddress {
+  const AppAddress({
+    this.address,
+    this.city,
+    this.state,
+    this.postalCode,
+  });
+
+  final String? address;
+  final String? city;
+  final String? state;
+  final String? postalCode;
+
+  bool get isComplete =>
+      address?.trim().isNotEmpty == true &&
+      city?.trim().isNotEmpty == true &&
+      state?.trim().isNotEmpty == true &&
+      postalCode?.trim().isNotEmpty == true;
+}
+
 final class AppPosition {
-  const AppPosition({required this.latitude, required this.longitude});
+  const AppPosition({
+    required this.latitude,
+    required this.longitude,
+    this.address,
+  });
+
   final double latitude;
   final double longitude;
+  final AppAddress? address;
 }
 
 final class LocationException implements Exception {

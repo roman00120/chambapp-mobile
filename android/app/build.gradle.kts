@@ -33,7 +33,7 @@ val releaseDartDefines = providers.gradleProperty("dart-defines").orNull
 
 android {
     namespace = "com.chambapp.mobile"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

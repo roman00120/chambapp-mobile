@@ -46,6 +46,7 @@ final class ReviewModel {
 final class ProfessionalModel {
   const ProfessionalModel({
     required this.id,
+    this.userId,
     required this.name,
     required this.rating,
     required this.totalReviews,
@@ -61,6 +62,7 @@ final class ProfessionalModel {
   });
 
   final int id;
+  final int? userId;
   final String name;
   final String? avatarUrl;
   final String? bio;
@@ -80,6 +82,7 @@ final class ProfessionalModel {
   factory ProfessionalModel.fromJson(Map<String, dynamic> json) =>
       ProfessionalModel(
         id: jsonInt(json['id']),
+        userId: json['user_id'] != null ? jsonInt(json['user_id']) : null,
         name: json['name']?.toString() ?? 'Profesional',
         avatarUrl: (json['avatar'] ?? json['profile_photo_url'])?.toString(),
         bio: json['bio']?.toString(),

@@ -95,12 +95,27 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
   Widget build(BuildContext context) {
     final detail = ref.watch(jobDetailProvider(widget.jobId));
     final quotes = ref.watch(jobQuotesProvider(widget.jobId));
-    final role = ref.watch(authControllerProvider).user?.role;
+    final currentUser = ref.watch(authControllerProvider).user;
+    final role = currentUser?.role;
     final currentJob = detail.value;
     if (currentJob != null) _lastJob = currentJob;
-    final primary = currentJob == null || role == null
+
+    final isClient = currentJob != null &&
+        ((currentJob.clientId != null && currentUser != null && currentJob.clientId == currentUser.id) ||
+         (role == UserRole.client) ||
+         (role == UserRole.admin && (currentJob.professional?.userId == null || currentJob.professional!.userId != currentUser?.id)));
+
+    final isProfessional = currentJob != null &&
+        ((currentJob.professional?.userId != null && currentUser != null && currentJob.professional!.userId == currentUser.id) ||
+         (role == UserRole.professional));
+
+    final primary = currentJob == null || currentUser == null
         ? null
-        : JobWorkflowActions.primary(role, currentJob.status);
+        : JobWorkflowActions.primaryForJob(
+            isClient: isClient,
+            isProfessional: isProfessional,
+            status: currentJob.status,
+          );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detalle de chamba')),
@@ -123,7 +138,7 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
             ),
             children: [
               if (widget.createdScheduled) const _SuccessNotice(),
-              _StatusHeader(job: job, role: role),
+              _StatusHeader(job: job, isClient: isClient, isProfessional: isProfessional),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 job.category?.name ?? job.title,
@@ -159,9 +174,9 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
                   child: ListTile(title: Text(_actionMessage!)),
                 ),
               const SizedBox(height: AppSpacing.lg),
-              if (role == UserRole.professional) _professionalContent(job),
-              if (role == UserRole.client) _clientContent(job, quotes),
-              if (role == UserRole.professional && job.payment != null)
+              if (isProfessional) _professionalContent(job),
+              if (isClient) _clientContent(job, quotes),
+              if (isProfessional && job.payment != null)
                 _ProfessionalPayment(payment: job.payment!),
               const SizedBox(height: AppSpacing.xl),
               Text('Progreso', style: Theme.of(context).textTheme.titleLarge),
@@ -251,7 +266,7 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
       return FilledButton.icon(
         onPressed: () => context.push('/jobs/${job.id}/checkout'),
         icon: const Icon(Icons.payment),
-        label: const Text('Pagar en Chambapp'),
+        label: const Text('Pagar Chamba'),
       );
     }
     if (job.status == JobStatus.awaitingConfirmation) {
@@ -397,6 +412,9 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
     try {
       final repository = ref.read(jobRepositoryProvider);
       switch (action.type) {
+        case JobWorkflowActionType.pay:
+          if (mounted) context.push('/jobs/${job.id}/checkout');
+          return;
         case JobWorkflowActionType.onTheWay:
           await repository.markOnTheWay(job.id);
         case JobWorkflowActionType.arrived:
@@ -568,23 +586,25 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
 }
 
 class _StatusHeader extends StatelessWidget {
-  const _StatusHeader({required this.job, required this.role});
+  const _StatusHeader({
+    required this.job,
+    required this.isClient,
+    required this.isProfessional,
+  });
   final JobModel job;
-  final UserRole? role;
+  final bool isClient;
+  final bool isProfessional;
 
   @override
   Widget build(BuildContext context) {
-    final text = switch ((role, job.status)) {
-      (UserRole.professional, JobStatus.paid) => 'Pago confirmado',
-      (UserRole.professional, JobStatus.onTheWay) => 'Vas en camino',
-      (UserRole.professional, JobStatus.arrived) => 'Llegaste al servicio',
-      (UserRole.professional, JobStatus.inProgress) => 'Trabajo en proceso',
-      (UserRole.client, JobStatus.onTheWay) => 'Tu profesional va en camino',
-      (UserRole.client, JobStatus.arrived) => 'Tu profesional llegó',
-      (UserRole.client, JobStatus.inProgress) => 'Tu chamba está en proceso',
-      (_, JobStatus.awaitingConfirmation) => 'Esperando confirmación',
-      (_, JobStatus.completed) => 'Chamba completada',
-      (_, JobStatus.disputed) => 'En revisión',
+    final text = switch (job.status) {
+      JobStatus.paid => isProfessional ? 'Pago confirmado' : 'Pago en custodia',
+      JobStatus.onTheWay => isProfessional ? 'Vas en camino' : 'Tu profesional va en camino',
+      JobStatus.arrived => isProfessional ? 'Llegaste al servicio' : 'Tu profesional llegó',
+      JobStatus.inProgress => isProfessional ? 'Trabajo en proceso' : 'Tu chamba está en proceso',
+      JobStatus.awaitingConfirmation => 'Esperando confirmación',
+      JobStatus.completed => 'Chamba completada',
+      JobStatus.disputed => 'En revisión',
       _ => job.status.label,
     };
     return Card(
@@ -592,7 +612,7 @@ class _StatusHeader extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.work_history_outlined),
         title: Text(text, style: const TextStyle(fontWeight: FontWeight.w900)),
-        subtitle: job.status == JobStatus.onTheWay && role == UserRole.client
+        subtitle: job.status == JobStatus.onTheWay && isClient
             ? const Text('Actualizaremos el estado mientras ves esta pantalla.')
             : null,
       ),

@@ -8,6 +8,8 @@ abstract interface class GoogleIdentityProvider {
 final class NativeGoogleIdentityProvider implements GoogleIdentityProvider {
   static const _serverClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue:
+        '750372864737-skigrd07vk2l3ivv50k2mrgp4u2taahb.apps.googleusercontent.com',
   );
 
   bool _initialized = false;
@@ -45,13 +47,19 @@ final class NativeGoogleIdentityProvider implements GoogleIdentityProvider {
       if (error.code == GoogleSignInExceptionCode.clientConfigurationError ||
           error.code == GoogleSignInExceptionCode.providerConfigurationError) {
         throw const AppException(
-          message: 'Google no está configurado correctamente para esta APK.',
+          message:
+              'Google OAuth no autorizado. Verifica que el SHA-1 esté registrado en Google Cloud Console.',
           code: 'GOOGLE_CONFIGURATION_ERROR',
         );
       }
       throw const AppException(
         message: 'No se pudo iniciar sesión con Google. Inténtalo nuevamente.',
         code: 'GOOGLE_SIGN_IN_FAILED',
+      );
+    } catch (error) {
+      throw AppException(
+        message: 'Error al conectar con Google: $error',
+        code: 'GOOGLE_SIGN_IN_EXCEPTION',
       );
     }
   }

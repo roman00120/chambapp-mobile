@@ -28,15 +28,24 @@ final class LocationController extends Notifier<LocationState> {
   LocationState build() => const LocationState();
 
   Future<void> detect() async {
-    state = const LocationState(status: LocationStatus.detecting);
+    state = const LocationState(
+      status: LocationStatus.detecting,
+      message: 'Obteniendo dirección…',
+    );
     try {
       final position = await ref
           .read(locationServiceProvider)
           .determinePosition();
+
+      final isAddressComplete = position.address?.isComplete == true;
+      final msg = isAddressComplete
+          ? 'Ubicación encontrada ✓'
+          : 'Ubicación encontrada. Completa tu dirección.';
+
       state = LocationState(
         status: LocationStatus.found,
         position: position,
-        message: 'Ubicación encontrada.',
+        message: msg,
       );
     } on LocationException catch (error) {
       state = LocationState(

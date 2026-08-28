@@ -4,6 +4,7 @@ import 'package:chambapp_mobile/app/providers.dart';
 import 'package:chambapp_mobile/core/errors/app_exception.dart';
 import 'package:chambapp_mobile/core/theme/app_theme.dart';
 import 'package:chambapp_mobile/features/catalog/presentation/catalog_providers.dart';
+import 'package:chambapp_mobile/features/catalog/presentation/service_request_screen.dart';
 import 'package:chambapp_mobile/features/home/presentation/client_home_screen.dart';
 import 'package:chambapp_mobile/features/jobs/domain/job_models.dart';
 import 'package:chambapp_mobile/features/jobs/presentation/immediate_job_screen.dart';
@@ -219,4 +220,150 @@ void main() {
       },
     );
   }
+
+  testWidgets('ServiceRequestScreen muestra contexto del servicio sin pedir categoria', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final fakeJobs = FakeJobRepository();
+    final container = _container(jobs: fakeJobs);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: _material(
+          ServiceRequestScreen(
+            serviceId: testService.id,
+            service: testService,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Contexto del servicio visible
+    expect(find.text('Reparación de fugas'), findsOneWidget);
+    expect(find.text('Luis Profesional'), findsOneWidget);
+    expect(find.text('Plomería'), findsOneWidget);
+
+    // NO debe mostrar el picker genérico de categorías ni "¿Qué necesitas?"
+    expect(find.text('¿Qué necesitas?'), findsNothing);
+    expect(
+      find.text('Selecciona la categoría del trabajo que quieres programar.'),
+      findsNothing,
+    );
+
+    // Campos de fecha, ubicación y detalles listos
+    expect(find.byKey(const Key('request_address')), findsOneWidget);
+    expect(find.byKey(const Key('request_city')), findsOneWidget);
+    expect(find.byKey(const Key('request_description')), findsOneWidget);
+    expect(find.byKey(const Key('confirm_service_request')), findsOneWidget);
+  });
+
+  testWidgets('ServiceRequestScreen envia solicitud directa y muestra confirmacion', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final fakeJobs = FakeJobRepository();
+    final container = _container(jobs: fakeJobs);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: _material(
+          ServiceRequestScreen(
+            serviceId: testService.id,
+            service: testService,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.enterText(
+      find.byKey(const Key('request_address')),
+      'Av. Vallarta 1234',
+    );
+    await tester.enterText(find.byKey(const Key('request_city')), 'Guadalajara');
+    await tester.enterText(find.byKey(const Key('request_state')), 'Jalisco');
+    await tester.enterText(find.byKey(const Key('request_postal')), '44100');
+    await tester.enterText(
+      find.byKey(const Key('request_description')),
+      'Requiero reparación de tubería debajo de la tarja.',
+    );
+
+    await tester.tap(find.byKey(const Key('confirm_service_request')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(fakeJobs.createScheduledCalls, 1);
+    expect(fakeJobs.lastScheduledInput?.serviceId, testService.id);
+    expect(fakeJobs.lastScheduledInput?.categoryId, testCategory.id);
+    expect(fakeJobs.lastScheduledInput?.title, testService.title);
+    expect(fakeJobs.lastScheduledInput?.location.address, 'Av. Vallarta 1234');
+    expect(fakeJobs.lastScheduledInput?.location.city, 'Guadalajara');
+    expect(fakeJobs.lastScheduledInput?.location.state, 'Jalisco');
+    expect(fakeJobs.lastScheduledInput?.location.postalCode, '44100');
+    expect(find.text('¡Solicitud enviada!'), findsOneWidget);
+
+    await tester.tap(find.text('Ver detalle de la solicitud'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+  });
+
+  testWidgets(
+    'ServiceRequestScreen valida campos obligatorios de dirección localmente sin llamar API',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fakeJobs = FakeJobRepository();
+      final container = _container(jobs: fakeJobs);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: _material(
+            ServiceRequestScreen(
+              serviceId: testService.id,
+              service: testService,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Intento con campos vacíos
+      await tester.tap(find.byKey(const Key('confirm_service_request')));
+      await tester.pump();
+
+      expect(fakeJobs.createScheduledCalls, 0);
+      expect(find.text('Describe brevemente lo que necesitas (mínimo 5 caracteres).'), findsWidgets);
+
+      // Llenamos descripción pero no dirección
+      await tester.enterText(
+        find.byKey(const Key('request_description')),
+        'Necesito cambio de tubería completo en baño.',
+      );
+      await tester.tap(find.byKey(const Key('confirm_service_request')));
+      await tester.pump();
+
+      expect(fakeJobs.createScheduledCalls, 0);
+      expect(find.text('Ingresa la dirección del servicio.'), findsWidgets);
+    },
+  );
 }
+

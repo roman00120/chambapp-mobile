@@ -2,6 +2,7 @@ import 'package:chambapp_mobile/features/auth/domain/user.dart';
 import 'package:chambapp_mobile/features/jobs/domain/job_models.dart';
 
 enum JobWorkflowActionType {
+  pay,
   onTheWay,
   arrived,
   start,
@@ -25,8 +26,28 @@ final class JobPrimaryAction {
 }
 
 abstract final class JobWorkflowActions {
-  static JobPrimaryAction? primary(UserRole role, JobStatus status) {
-    if (role == UserRole.professional) {
+  static JobPrimaryAction? primaryForJob({
+    required bool isClient,
+    required bool isProfessional,
+    required JobStatus status,
+  }) {
+    if (isClient) {
+      if (status == JobStatus.awaitingPayment) {
+        return const JobPrimaryAction(
+          type: JobWorkflowActionType.pay,
+          label: 'Pagar Chamba',
+          loadingLabel: 'Abriendo pago…',
+        );
+      }
+      if (status == JobStatus.awaitingConfirmation) {
+        return const JobPrimaryAction(
+          type: JobWorkflowActionType.confirm,
+          label: 'Confirmar trabajo',
+          loadingLabel: 'Confirmando trabajo…',
+        );
+      }
+    }
+    if (isProfessional) {
       return switch (status) {
         JobStatus.paid => const JobPrimaryAction(
           type: JobWorkflowActionType.onTheWay,
@@ -51,23 +72,32 @@ abstract final class JobWorkflowActions {
         _ => null,
       };
     }
-    if (role == UserRole.client && status == JobStatus.awaitingConfirmation) {
-      return const JobPrimaryAction(
-        type: JobWorkflowActionType.confirm,
-        label: 'Confirmar trabajo',
-        loadingLabel: 'Confirmando trabajo…',
-      );
-    }
     return null;
   }
 
+  static JobPrimaryAction? primary(UserRole role, JobStatus status) =>
+      primaryForJob(
+        isClient: role == UserRole.client || role == UserRole.admin,
+        isProfessional: role == UserRole.professional,
+        status: status,
+      );
+
+  static JobPrimaryAction? secondaryForJob({
+    required bool isClient,
+    required JobStatus status,
+  }) =>
+      isClient && status == JobStatus.awaitingConfirmation
+          ? const JobPrimaryAction(
+              type: JobWorkflowActionType.dispute,
+              label: 'Reportar un problema',
+              loadingLabel: 'Enviando reporte…',
+              destructive: true,
+            )
+          : null;
+
   static JobPrimaryAction? secondary(UserRole role, JobStatus status) =>
-      role == UserRole.client && status == JobStatus.awaitingConfirmation
-      ? const JobPrimaryAction(
-          type: JobWorkflowActionType.dispute,
-          label: 'Reportar un problema',
-          loadingLabel: 'Enviando reporte…',
-          destructive: true,
-        )
-      : null;
+      secondaryForJob(
+        isClient: role == UserRole.client || role == UserRole.admin,
+        status: status,
+      );
 }

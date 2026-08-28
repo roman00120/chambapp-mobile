@@ -6,9 +6,11 @@ import 'package:chambapp_mobile/features/auth/presentation/auth_state.dart';
 import 'package:chambapp_mobile/features/auth/presentation/login_screen.dart';
 import 'package:chambapp_mobile/features/auth/presentation/register_screen.dart';
 import 'package:chambapp_mobile/features/auth/presentation/splash_screen.dart';
+import 'package:chambapp_mobile/features/catalog/domain/catalog_models.dart';
 import 'package:chambapp_mobile/features/catalog/presentation/professional_detail_screen.dart';
 import 'package:chambapp_mobile/features/catalog/presentation/search_screen.dart';
 import 'package:chambapp_mobile/features/catalog/presentation/service_detail_screen.dart';
+import 'package:chambapp_mobile/features/catalog/presentation/service_request_screen.dart';
 import 'package:chambapp_mobile/features/favorites/presentation/favorites_screen.dart';
 import 'package:chambapp_mobile/features/home/presentation/client_home_screen.dart';
 import 'package:chambapp_mobile/features/jobs/domain/job_models.dart';
@@ -271,6 +273,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/services/:id',
         builder: (_, state) =>
             ServiceDetailScreen(serviceId: _id(state.pathParameters['id'])),
+      ),
+      GoRoute(
+        path: '/services/:id/request',
+        builder: (_, state) => ServiceRequestScreen(
+          serviceId: _id(state.pathParameters['id']),
+          service: state.extra is ServiceModel ? state.extra! as ServiceModel : null,
+        ),
       ),
       GoRoute(
         path: '/professionals/:id',

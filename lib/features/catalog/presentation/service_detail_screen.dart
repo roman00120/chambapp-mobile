@@ -80,9 +80,10 @@ class ServiceDetailScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.lg),
                     PrimaryButton(
                       key: const Key('request_service'),
-                      label: 'Solicitar chamba',
+                      label: 'Solicitar servicio',
                       onPressed: () => context.push(
-                        '/request/immediate?category=${service.category?.id ?? ''}&service=${service.id}',
+                        '/services/${service.id}/request',
+                        extra: service,
                       ),
                     ),
                   ],

@@ -108,6 +108,9 @@ final class FakeJobRepository implements JobRepository {
   int confirmCalls = 0;
   int disputeCalls = 0;
 
+  int createScheduledCalls = 0;
+  ScheduledJobInput? lastScheduledInput;
+
   @override
   Future<JobModel> createImmediate(ImmediateJobInput input) {
     immediateCalls++;
@@ -115,7 +118,11 @@ final class FakeJobRepository implements JobRepository {
   }
 
   @override
-  Future<JobModel> createScheduled(ScheduledJobInput input) async => testJob;
+  Future<JobModel> createScheduled(ScheduledJobInput input) async {
+    createScheduledCalls++;
+    lastScheduledInput = input;
+    return testJob;
+  }
 
   @override
   Future<JobModel> getJob(int id) async {

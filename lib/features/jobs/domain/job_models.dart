@@ -36,6 +36,8 @@ enum JobStatus {
 final class JobModel {
   const JobModel({
     required this.id,
+    this.clientId,
+    this.professionalId,
     required this.title,
     required this.description,
     required this.status,
@@ -64,6 +66,8 @@ final class JobModel {
   });
 
   final int id;
+  final int? clientId;
+  final int? professionalId;
   final String title;
   final String description;
   final String? serviceMode;
@@ -106,6 +110,8 @@ final class JobModel {
     }.contains(status);
     return JobModel(
       id: jsonInt(json['id']),
+      clientId: json['client_id'] != null ? jsonInt(json['client_id']) : null,
+      professionalId: json['professional_id'] != null ? jsonInt(json['professional_id']) : null,
       title: json['title']?.toString() ?? 'Chamba',
       description: json['description']?.toString() ?? '',
       serviceMode: json['service_mode']?.toString(),
