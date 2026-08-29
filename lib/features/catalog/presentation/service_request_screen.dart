@@ -216,53 +216,7 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
 
       if (!mounted) return;
 
-      await showModalBottomSheet<void>(
-        context: context,
-        isDismissible: false,
-        enableDrag: false,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (ctx) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Color(0xFFE8F5E9),
-                  child: Icon(Icons.check, size: 40, color: AppColors.success),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  '¡Solicitud enviada!',
-                  style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Tu solicitud fue enviada directamente a ${service.professional?.name ?? 'el profesional'}.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(ctx).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                PrimaryButton(
-                  label: 'Ver detalle de la solicitud',
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      if (mounted) {
-        context.go('/jobs/${job.id}?created=scheduled');
-      }
+      context.go('/jobs/${job.id}/checkout');
     } catch (error) {
       if (mounted) {
         AppFeedback.show(context, '$error');

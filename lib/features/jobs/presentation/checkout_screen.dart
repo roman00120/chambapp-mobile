@@ -76,7 +76,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
             Text(
               job.status == JobStatus.paid
                   ? 'Pago aprobado'
-                  : 'Cotización aceptada',
+                  : 'Confirmar contratación',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -91,15 +91,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
             if (job.status != JobStatus.paid &&
                 payment?.status != PaymentStatus.approved)
               FilledButton.icon(
+                key: const Key('pay_chamba_button'),
                 onPressed: _preparing ? null : () => _confirmAndCheckout(job),
                 icon: _preparing
                     ? const SizedBox.square(
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.open_in_new),
+                    : const Icon(Icons.payment),
                 label: Text(
-                  _preparing ? 'Preparando pago…' : 'Pagar en Chambapp',
+                  _preparing ? 'Preparando pago…' : 'Pagar Chamba',
                 ),
               ),
             if (payment != null && payment.status != PaymentStatus.approved)
@@ -114,12 +115,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   }
 
   Future<void> _confirmAndCheckout(JobModel job) async {
+    final basePrice = _payment?.baseAmount ??
+        job.economicBreakdown?.baseAmount ??
+        job.agreedPrice ??
+        job.service?.price;
+    final parsedBase = basePrice != null ? double.tryParse(basePrice) : null;
+    final total = _payment?.customerTotal ??
+        job.economicBreakdown?.customerTotal ??
+        (parsedBase != null ? (parsedBase * 1.15).toStringAsFixed(2) : (job.agreedPrice ?? '--'));
+    final currency = _payment?.currency ?? job.currency ?? 'MXN';
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Abrir Mercado Pago'),
         content: Text(
-          'Total: \$${_payment?.customerTotal ?? job.economicBreakdown?.customerTotal ?? job.agreedPrice ?? '--'} ${_payment?.currency ?? job.currency ?? 'MXN'}\n\nEl pago se confirmará únicamente cuando Laravel reciba el resultado de Mercado Pago.',
+          'Total: \$$total $currency\n\nEl pago se confirmará únicamente cuando Laravel reciba el resultado de Mercado Pago.',
         ),
         actions: [
           TextButton(
@@ -223,40 +234,61 @@ class _Summary extends StatelessWidget {
   const _Summary({required this.job, required this.payment});
   final JobModel job;
   final PaymentModel? payment;
+
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            job.category?.name ?? job.title,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          if (job.professional != null)
-            Text('Profesional: ${job.professional!.name}'),
-          const Divider(),
-          Text(
-            'Precio base: \$${payment?.baseAmount ?? job.economicBreakdown?.baseAmount ?? job.agreedPrice ?? '--'} ${payment?.currency ?? job.currency ?? 'MXN'}',
-          ),
-          if (payment?.clientServiceFee != null ||
-              job.economicBreakdown?.clientServiceFee != null)
+  Widget build(BuildContext context) {
+    final basePrice = payment?.baseAmount ??
+        job.economicBreakdown?.baseAmount ??
+        job.agreedPrice ??
+        job.service?.price ??
+        '--';
+    final parsedBase = double.tryParse(basePrice);
+    final feePercent = payment?.clientServiceFeePercent ??
+        job.economicBreakdown?.clientServiceFeePercent ??
+        '15';
+    final serviceFee = payment?.clientServiceFee ??
+        job.economicBreakdown?.clientServiceFee ??
+        (parsedBase != null ? (parsedBase * 0.15).toStringAsFixed(2) : null);
+    final total = payment?.customerTotal ??
+        job.economicBreakdown?.customerTotal ??
+        payment?.grossAmount ??
+        (parsedBase != null ? (parsedBase * 1.15).toStringAsFixed(2) : (job.agreedPrice ?? '--'));
+    final currency = payment?.currency ?? job.currency ?? 'MXN';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              'Cargo de servicio Chambapp (${payment?.clientServiceFeePercent ?? job.economicBreakdown?.clientServiceFeePercent}%): +\$${payment?.clientServiceFee ?? job.economicBreakdown?.clientServiceFee}',
+              job.service?.title ?? job.category?.name ?? job.title,
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-          Text(
-            'Total: \$${payment?.customerTotal ?? job.economicBreakdown?.customerTotal ?? payment?.grossAmount ?? job.agreedPrice ?? '--'} ${payment?.currency ?? job.currency ?? 'MXN'}',
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
-          ),
-          const Text(
-            'El cargo Chambapp es un cargo de servicio, no un impuesto.',
-          ),
-          const Text('Pago procesado de forma segura por Mercado Pago.'),
-        ],
+            if (job.professional != null)
+              Text('Profesional: ${job.professional!.name}'),
+            const Divider(),
+            Text(
+              'Precio base: \$$basePrice $currency',
+            ),
+            if (serviceFee != null)
+              Text(
+                'Cargo de servicio Chambapp ($feePercent%): +\$$serviceFee $currency',
+              ),
+            Text(
+              'Total: \$$total $currency',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            const Text(
+              'El cargo Chambapp es un cargo de servicio, no un impuesto.',
+            ),
+            const Text('Pago procesado de forma segura por Mercado Pago.'),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _PaymentState extends StatelessWidget {

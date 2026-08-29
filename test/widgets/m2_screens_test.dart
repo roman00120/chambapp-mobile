@@ -314,11 +314,6 @@ void main() {
     expect(fakeJobs.lastScheduledInput?.location.city, 'Guadalajara');
     expect(fakeJobs.lastScheduledInput?.location.state, 'Jalisco');
     expect(fakeJobs.lastScheduledInput?.location.postalCode, '44100');
-    expect(find.text('¡Solicitud enviada!'), findsOneWidget);
-
-    await tester.tap(find.text('Ver detalle de la solicitud'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
   });
 
   testWidgets(

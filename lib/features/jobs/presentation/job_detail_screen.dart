@@ -100,14 +100,24 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
     final currentJob = detail.value;
     if (currentJob != null) _lastJob = currentJob;
 
+    final isOwnerClient = currentJob != null &&
+        currentJob.clientId != null &&
+        currentUser != null &&
+        currentJob.clientId == currentUser.id;
+    final isAssignedPro = currentJob != null &&
+        currentJob.professional?.userId != null &&
+        currentUser != null &&
+        currentJob.professional!.userId == currentUser.id;
+
     final isClient = currentJob != null &&
-        ((currentJob.clientId != null && currentUser != null && currentJob.clientId == currentUser.id) ||
-         (role == UserRole.client) ||
-         (role == UserRole.admin && (currentJob.professional?.userId == null || currentJob.professional!.userId != currentUser?.id)));
+        (isOwnerClient ||
+         (!isAssignedPro && currentUser?.activeMode == 'client') ||
+         (!isAssignedPro && (role == UserRole.client || role == UserRole.admin)));
 
     final isProfessional = currentJob != null &&
-        ((currentJob.professional?.userId != null && currentUser != null && currentJob.professional!.userId == currentUser.id) ||
-         (role == UserRole.professional));
+        (isAssignedPro ||
+         (!isOwnerClient && currentUser?.activeMode == 'professional') ||
+         (!isOwnerClient && role == UserRole.professional));
 
     final primary = currentJob == null || currentUser == null
         ? null

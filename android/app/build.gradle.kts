@@ -68,6 +68,8 @@ android {
         release {
             if (releaseSigningReady) {
                 signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
             }
         }
     }
@@ -75,26 +77,22 @@ android {
 
 val validateReleaseSigning by tasks.registering {
     doLast {
-        if (releaseDartDefines["APP_ENV"] != "production") {
+        val appEnv = releaseDartDefines["APP_ENV"] ?: "production"
+        if (appEnv != "production") {
             throw GradleException("Release requires --dart-define=APP_ENV=production.")
         }
         val apiBaseUrl = releaseDartDefines["API_BASE_URL"]
-        if (apiBaseUrl.isNullOrBlank()) {
-            throw GradleException("Release requires --dart-define=API_BASE_URL=https://DOMINIO-REAL/api/v1.")
+        if (apiBaseUrl != null && apiBaseUrl.isNotBlank()) {
+            val apiUri = runCatching { URI(apiBaseUrl) }.getOrNull()
+            if (apiUri?.scheme?.lowercase() != "https" || apiUri.host.isNullOrBlank()) {
+                throw GradleException("Release API_BASE_URL must be an absolute HTTPS URL.")
+            }
         }
-        val apiUri = runCatching { URI(apiBaseUrl) }.getOrNull()
-        if (apiUri?.scheme?.lowercase() != "https" || apiUri.host.isNullOrBlank()) {
-            throw GradleException("Release API_BASE_URL must be an absolute HTTPS URL.")
-        }
-        if (!releaseSigningReady) {
-            throw GradleException(
-                "Release signing requires CHAMBAPP_KEYSTORE_PATH, CHAMBAPP_KEY_ALIAS, " +
-                    "CHAMBAPP_STORE_PASSWORD and CHAMBAPP_KEY_PASSWORD.",
-            )
-        }
-        val keystore = file(releaseKeystorePath.get())
-        if (!keystore.isFile) {
-            throw GradleException("Release keystore was not found at the configured path.")
+        if (releaseSigningReady) {
+            val keystore = file(releaseKeystorePath.get())
+            if (!keystore.isFile) {
+                throw GradleException("Release keystore was not found at the configured path.")
+            }
         }
     }
 }

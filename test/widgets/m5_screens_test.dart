@@ -177,7 +177,7 @@ void main() {
         material(container, const CheckoutScreen(jobId: 12)),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Pagar en Chambapp'));
+      await tester.tap(find.text('Pagar Chamba'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Continuar'));
       await tester.pump();
