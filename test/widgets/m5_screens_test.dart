@@ -280,7 +280,7 @@ void main() {
 
       expect(find.text('Confirmar contratación'), findsOneWidget);
       expect(find.text('Precio base: \$50.00 MXN'), findsOneWidget);
-      expect(find.text('Cargo de servicio Chambapp (15.00%): +\$7.50'), findsOneWidget);
+      expect(find.text('Cargo de servicio Chambapp (15.00%): +\$7.50 MXN'), findsOneWidget);
       expect(find.text('Total: \$57.50 MXN'), findsOneWidget);
       expect(find.text('Pagar Chamba'), findsOneWidget);
     },

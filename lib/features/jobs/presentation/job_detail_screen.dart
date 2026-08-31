@@ -100,25 +100,23 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
     final currentJob = detail.value;
     if (currentJob != null) _lastJob = currentJob;
 
-    final isJobClient = currentJob != null &&
+    final isOwnerClient = currentJob != null &&
         currentUser != null &&
         currentJob.clientId != null &&
         currentJob.clientId == currentUser.id;
 
-    final isJobProfessional = currentJob != null &&
+    final isAssignedPro = currentJob != null &&
         currentUser != null &&
-        currentJob.professional?.userId != null &&
-        currentJob.professional!.userId == currentUser.id;
+        ((currentJob.professional?.userId != null && currentJob.professional!.userId == currentUser.id) ||
+         (currentJob.service?.professional?.userId != null && currentJob.service!.professional!.userId == currentUser.id));
 
-    final isClient = isJobClient ||
-        (!isJobProfessional &&
-            currentJob != null &&
-            (effectiveRole == UserRole.client || effectiveRole == UserRole.admin));
+    final isClient = isOwnerClient ||
+        (!isAssignedPro &&
+            (currentUser?.activeMode == 'client' || effectiveRole == UserRole.client || effectiveRole == UserRole.admin));
 
-    final isProfessional = isJobProfessional ||
-        (!isJobClient &&
-            currentJob != null &&
-            effectiveRole == UserRole.professional);
+    final isProfessional = isAssignedPro ||
+        (!isOwnerClient &&
+            (currentUser?.activeMode == 'professional' || effectiveRole == UserRole.professional));
 
     final primary = currentJob == null || currentUser == null
         ? null
@@ -631,24 +629,33 @@ class _StatusHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = switch (job.status) {
-      JobStatus.paid => isProfessional ? 'Pago confirmado' : 'Pago en custodia',
-      JobStatus.onTheWay => isProfessional ? 'Vas en camino' : 'Tu profesional va en camino',
-      JobStatus.arrived => isProfessional ? 'Llegaste al servicio' : 'Tu profesional llegó',
-      JobStatus.inProgress => isProfessional ? 'Trabajo en proceso' : 'Tu chamba está en proceso',
-      JobStatus.awaitingConfirmation => 'Esperando confirmación',
-      JobStatus.completed => 'Chamba completada',
-      JobStatus.disputed => 'En revisión',
-      _ => job.status.label,
+    final (title, subtitle) = switch (job.status) {
+      JobStatus.awaitingPayment => isProfessional
+          ? ('Cliente aceptó', 'Esperando confirmación del pago.')
+          : ('Confirmar contratación', 'Esperando pago para confirmar la chamba.'),
+      JobStatus.paid => isProfessional
+          ? ('Pago confirmado', null)
+          : ('Pago en custodia', null),
+      JobStatus.onTheWay => isProfessional
+          ? ('Vas en camino', null)
+          : ('Tu profesional va en camino', 'Actualizaremos el estado mientras ves esta pantalla.'),
+      JobStatus.arrived => isProfessional
+          ? ('Llegaste al servicio', null)
+          : ('Tu profesional llegó', null),
+      JobStatus.inProgress => isProfessional
+          ? ('Trabajo en proceso', null)
+          : ('Tu chamba está en proceso', null),
+      JobStatus.awaitingConfirmation => ('Esperando confirmación', null),
+      JobStatus.completed => ('Chamba completada', null),
+      JobStatus.disputed => ('En revisión', null),
+      _ => (job.status.label, null),
     };
     return Card(
       color: AppColors.amber.withValues(alpha: .08),
       child: ListTile(
         leading: const Icon(Icons.work_history_outlined),
-        title: Text(text, style: const TextStyle(fontWeight: FontWeight.w900)),
-        subtitle: job.status == JobStatus.onTheWay && isClient
-            ? const Text('Actualizaremos el estado mientras ves esta pantalla.')
-            : null,
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+        subtitle: subtitle != null ? Text(subtitle) : null,
       ),
     );
   }
