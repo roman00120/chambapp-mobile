@@ -51,7 +51,6 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
   String? _cityError;
   String? _stateError;
   String? _postalError;
-  String? _descriptionError;
 
   @override
   void initState() {
@@ -119,7 +118,6 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
     if (_submitting) return;
 
     setState(() {
-      _descriptionError = null;
       _addressError = null;
       _cityError = null;
       _stateError = null;
@@ -134,22 +132,9 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
 
     bool hasErrors = false;
 
-    if (desc.length < 5) {
-      setState(() {
-        _descriptionError = 'Describe brevemente lo que necesitas (mínimo 5 caracteres).';
-      });
-      AppFeedback.show(
-        context,
-        'Describe brevemente lo que necesitas (mínimo 5 caracteres).',
-      );
-      hasErrors = true;
-    }
-
     if (addr.isEmpty) {
       setState(() => _addressError = 'Ingresa la dirección del servicio.');
-      if (!hasErrors) {
-        AppFeedback.show(context, 'Ingresa la dirección del servicio.');
-      }
+      AppFeedback.show(context, 'Ingresa la dirección del servicio.');
       hasErrors = true;
     }
 
@@ -191,13 +176,17 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
       startHour,
     );
 
+    final effectiveDescription = desc.isNotEmpty
+        ? desc
+        : (service.description.isNotEmpty ? service.description : service.title);
+
     try {
       final job = await ref.read(jobRepositoryProvider).createScheduled(
         ScheduledJobInput(
           categoryId: service.category?.id ?? 1,
           serviceId: service.id,
           title: service.title,
-          description: desc,
+          description: effectiveDescription,
           location: JobLocationInput(
             latitude: position?.latitude,
             longitude: position?.longitude,
@@ -267,7 +256,7 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Solicitar servicio'),
+        title: const Text('Contratar servicio'),
       ),
       body: SafeArea(
         child: ListView(
@@ -503,19 +492,15 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // Sección 3: Detalles de la solicitud
-            Text('Detalles del trabajo', style: Theme.of(context).textTheme.titleMedium),
+            // Sección 3: Detalles de la solicitud (opcional)
+            Text('Detalles adicionales (opcional)', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: AppSpacing.xs),
             AppTextField(
               key: const Key('request_description'),
               controller: _description,
-              label: '¿Qué necesitas que realice el profesional?',
-              hint: 'Describe brevemente los requerimientos, detalles o dudas...',
-              errorText: _descriptionError,
+              label: 'Instrucciones o detalles adicionales',
+              hint: 'Puedes dejar notas para el profesional (opcional)...',
               maxLines: 3,
-              onChanged: (_) {
-                if (_descriptionError != null) setState(() => _descriptionError = null);
-              },
             ),
             const SizedBox(height: AppSpacing.xl),
 
@@ -531,7 +516,7 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Resumen de solicitud',
+                      'Resumen de contratación',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -549,7 +534,7 @@ class _ServiceRequestScreenState extends ConsumerState<ServiceRequestScreen> {
 
             PrimaryButton(
               key: const Key('confirm_service_request'),
-              label: _submitting ? 'Enviando solicitud…' : 'Confirmar solicitud',
+              label: _submitting ? 'Creando contratación…' : 'Confirmar contratación',
               isLoading: _submitting,
               onPressed: _submitting ? null : () => _submit(service),
             ),

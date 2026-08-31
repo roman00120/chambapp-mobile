@@ -103,6 +103,14 @@ final class ApiJobRepository implements JobRepository {
       _workflow('/jobs/$id/confirm', data: {'completion_code': completionCode});
 
   @override
+  Future<JobModel> acceptJob(int id) =>
+      _workflow('/professional/jobs/$id/accept');
+
+  @override
+  Future<JobModel> rejectJob(int id) =>
+      _workflow('/professional/jobs/$id/reject');
+
+  @override
   Future<JobModel> reportProblem(
     int id, {
     required DisputeReason reason,

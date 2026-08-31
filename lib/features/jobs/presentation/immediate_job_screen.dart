@@ -2,13 +2,8 @@ import 'package:chambapp_mobile/core/theme/app_tokens.dart';
 import 'package:chambapp_mobile/features/catalog/domain/catalog_models.dart';
 import 'package:chambapp_mobile/features/catalog/presentation/catalog_providers.dart';
 import 'package:chambapp_mobile/features/catalog/presentation/widgets/category_grid.dart';
-import 'package:chambapp_mobile/features/jobs/domain/job_models.dart';
-import 'package:chambapp_mobile/features/jobs/presentation/job_providers.dart';
-import 'package:chambapp_mobile/features/jobs/presentation/job_wizard_shell.dart';
-import 'package:chambapp_mobile/features/location/presentation/location_controller.dart';
-import 'package:chambapp_mobile/features/location/presentation/location_fields.dart';
-import 'package:chambapp_mobile/shared/widgets/app_feedback.dart';
-import 'package:chambapp_mobile/shared/widgets/app_text_field.dart';
+import 'package:chambapp_mobile/features/catalog/presentation/widgets/service_card.dart';
+import 'package:chambapp_mobile/shared/widgets/error_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,15 +18,8 @@ class ImmediateJobScreen extends ConsumerStatefulWidget {
 }
 
 class _ImmediateJobScreenState extends ConsumerState<ImmediateJobScreen> {
-  int _step = 0;
   int? _categoryId;
   CategoryModel? _category;
-  bool _submitting = false;
-  final _description = TextEditingController();
-  final _address = TextEditingController();
-  final _city = TextEditingController();
-  final _state = TextEditingController();
-  final _postal = TextEditingController();
 
   @override
   void initState() {
@@ -40,196 +28,172 @@ class _ImmediateJobScreenState extends ConsumerState<ImmediateJobScreen> {
   }
 
   @override
-  void dispose() {
-    for (final controller in [_description, _address, _city, _state, _postal]) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
+  Widget build(BuildContext context) {
+    final categoriesAsync = ref.watch(categoriesProvider);
 
-  void _next() {
-    FocusScope.of(context).unfocus();
-    if (_step == 0 && _categoryId == null) {
-      return _error('Selecciona una categoría.');
-    }
-    if (_step == 1 && _description.text.trim().length < 10) {
-      return _error('Cuéntanos qué necesitas con al menos 10 caracteres.');
-    }
-    if (_step == 2 && !_hasLocation()) {
-      return _error(
-        'Comparte tu ubicación o escribe dirección, ciudad y estado.',
-      );
-    }
-    if (_step < 3) setState(() => _step++);
-  }
+    // Buscamos los servicios correspondientes a la categoría seleccionada
+    final servicesInput = ServiceSearchQuery(
+      categorySlug: _category?.slug,
+    );
+    final servicesAsync = _category != null
+        ? ref.watch(servicesProvider(servicesInput))
+        : null;
 
-  bool _hasLocation() {
-    final position = ref.read(locationControllerProvider).position;
-    return position != null ||
-        (_address.text.trim().isNotEmpty &&
-            _city.text.trim().isNotEmpty &&
-            _state.text.trim().isNotEmpty);
-  }
-
-  Future<void> _submit() async {
-    if (_submitting) return;
-    setState(() => _submitting = true);
-    final position = ref.read(locationControllerProvider).position;
-    try {
-      final job = await ref
-          .read(jobRepositoryProvider)
-          .createImmediate(
-            ImmediateJobInput(
-              categoryId: _categoryId!,
-              serviceId: widget.serviceId,
-              description: _description.text,
-              location: JobLocationInput(
-                latitude: position?.latitude,
-                longitude: position?.longitude,
-                address: _address.text,
-                city: _city.text,
-                state: _state.text,
-                postalCode: _postal.text,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chamba ahora ⚡'),
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            // Banner de marketplace directo
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppRadii.card),
+                border: Border.all(
+                  color: AppColors.amberDark.withValues(alpha: 0.3),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.bolt, color: AppColors.amberDark, size: 28),
+                  SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Elige la categoría y selecciona al profesional disponible de tu preferencia para contratarlo directamente.',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.navy,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          );
-      ref.invalidate(jobsProvider);
-      if (mounted) context.go('/jobs/${job.id}/searching', extra: job);
-    } catch (error) {
-      if (mounted) _error('$error');
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider);
-    return JobWizardShell(
-      title: 'Chamba ahora',
-      step: _step,
-      stepCount: 4,
-      loading: _submitting,
-      nextLabel: _step == 3 ? 'Buscar profesionales' : 'Continuar',
-      onBack: _step == 0 ? null : () => setState(() => _step--),
-      onNext: _step == 3 ? _submit : _next,
-      child: switch (_step) {
-        0 => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '¿Qué necesitas?',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
             const SizedBox(height: AppSpacing.lg),
-            categories.when(
+
+            // 1. Selección de Categoría
+            Text(
+              '¿Qué necesitas resolver hoy?',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            categoriesAsync.when(
               data: (items) {
-                if (_categoryId != null) {
+                if (_categoryId != null && _category == null) {
                   _category = items
                       .where((item) => item.id == _categoryId)
                       .firstOrNull;
                 }
-                return CategoryGrid(
-                  categories: items,
-                  onTap: (category) => setState(() {
-                    _categoryId = category.id;
-                    _category = category;
-                  }),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CategoryGrid(
+                      categories: items,
+                      selectedId: _categoryId,
+                      onTap: (cat) => setState(() {
+                        _categoryId = cat.id;
+                        _category = cat;
+                      }),
+                    ),
+                    if (_category != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Text(
+                          'Categoría activa: ${_category!.name}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.navy,
+                          ),
+                        ),
+                      ),
+                  ],
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) =>
-                  const Text('No pudimos cargar las categorías.'),
-            ),
-            if (_category != null)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.md),
-                child: Text(
-                  'Seleccionada: ${_category!.name}',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: CircularProgressIndicator(),
                 ),
               ),
+              error: (error, _) => ErrorState(
+                title: 'No pudimos cargar las categorías',
+                message: error,
+                onRetry: () => ref.invalidate(categoriesProvider),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+
+            // 2. Lista de Profesionales y Servicios Disponibles
+            if (_category != null) ...[
+              Text(
+                'Profesionales y servicios disponibles',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              if (servicesAsync != null)
+                servicesAsync.when(
+                  data: (services) => services.isEmpty
+                      ? Container(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          decoration: BoxDecoration(
+                            color: AppColors.canvas,
+                            borderRadius: BorderRadius.circular(AppRadii.card),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Aún no hay profesionales registrados en esta categoría.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          children: services
+                              .map(
+                                (service) => Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.sm,
+                                  ),
+                                  child: ServiceCard(
+                                    service: service,
+                                    onTap: () => context.push(
+                                      '/services/${service.id}',
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                  loading: () => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(AppSpacing.lg),
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  error: (error, _) => ErrorState(
+                    title: 'No pudimos cargar los profesionales',
+                    message: error,
+                    onRetry: () => ref.invalidate(servicesProvider(servicesInput)),
+                  ),
+                ),
+            ] else ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: Text(
+                    'Toca una categoría para ver los profesionales y servicios listos para atenderte.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.muted),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
-        1 => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Descripción breve',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            const Text('Ejemplo: Tengo una fuga debajo del fregadero.'),
-            const SizedBox(height: AppSpacing.lg),
-            AppTextField(
-              key: const Key('immediate_description'),
-              controller: _description,
-              label: 'Cuéntanos qué necesitas',
-              textInputAction: TextInputAction.done,
-            ),
-          ],
-        ),
-        2 => LocationFields(
-          address: _address,
-          city: _city,
-          stateController: _state,
-          postalCode: _postal,
-        ),
-        _ => _Confirmation(
-          category: _category?.name ?? 'Categoría seleccionada',
-          description: _description.text,
-          location: _address.text.isNotEmpty
-              ? '${_address.text}, ${_city.text}'
-              : 'Ubicación del dispositivo',
-        ),
-      },
+      ),
     );
   }
-
-  void _error(String message) => AppFeedback.show(context, message);
-}
-
-class _Confirmation extends StatelessWidget {
-  const _Confirmation({
-    required this.category,
-    required this.description,
-    required this.location,
-  });
-  final String category;
-  final String description;
-  final String location;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Confirmar solicitud',
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-      const SizedBox(height: AppSpacing.lg),
-      _line('Categoría', category),
-      _line('Descripción', description),
-      _line('Ubicación', location),
-      const SizedBox(height: AppSpacing.lg),
-      const Text(
-        'Al continuar, el backend buscará profesionales disponibles. No se comparte contacto personal.',
-      ),
-    ],
-  );
-
-  Widget _line(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
-        Text(value),
-      ],
-    ),
-  );
-}
-
-extension _FirstOrNull<T> on Iterable<T> {
-  T? get firstOrNull => isEmpty ? null : first;
 }

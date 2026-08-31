@@ -11,6 +11,8 @@ abstract interface class JobRepository {
   Future<JobModel> startJob(int id);
   Future<JobModel> finishJob(int id);
   Future<JobModel> confirmJob(int id, String completionCode);
+  Future<JobModel> acceptJob(int id);
+  Future<JobModel> rejectJob(int id);
   Future<JobModel> reportProblem(
     int id, {
     required DisputeReason reason,

@@ -6,10 +6,12 @@ class CategoryGrid extends StatelessWidget {
   const CategoryGrid({
     required this.categories,
     required this.onTap,
+    this.selectedId,
     super.key,
   });
   final List<CategoryModel> categories;
   final ValueChanged<CategoryModel> onTap;
+  final int? selectedId;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -31,29 +33,71 @@ class CategoryGrid extends StatelessWidget {
         ),
         itemBuilder: (context, index) {
           final category = categories[index];
+          final isSelected = selectedId != null && selectedId == category.id;
+          final primaryColor = Theme.of(context).colorScheme.primary;
+
           return Semantics(
             button: true,
+            selected: isSelected,
             label: 'Ver ${category.name}',
-            child: InkWell(
-              key: Key('category_${category.id}'),
-              onTap: () => onTap(category),
-              borderRadius: BorderRadius.circular(AppRadii.card),
-              child: Card(
-                margin: EdgeInsets.zero,
+            child: Card(
+              margin: EdgeInsets.zero,
+              clipBehavior: Clip.antiAlias,
+              elevation: isSelected ? 2 : 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.card),
+                side: BorderSide(
+                  color: isSelected
+                      ? primaryColor
+                      : Theme.of(context).dividerColor.withValues(alpha: 0.25),
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              color: isSelected
+                  ? primaryColor.withValues(alpha: 0.12)
+                  : Theme.of(context).colorScheme.surface,
+              child: InkWell(
+                key: Key('category_${category.id}'),
+                onTap: () => onTap(category),
+                borderRadius: BorderRadius.circular(AppRadii.card),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.sm),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      _CategoryIcon(value: category.icon, slug: category.slug),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        category.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _CategoryIcon(
+                            value: category.icon,
+                            slug: category.slug,
+                            color: isSelected ? primaryColor : null,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            category.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w700,
+                              color: isSelected ? primaryColor : null,
+                            ),
+                          ),
+                        ],
                       ),
+                      if (isSelected)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Icon(
+                            Icons.check_circle,
+                            size: 18,
+                            color: primaryColor,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -67,9 +111,10 @@ class CategoryGrid extends StatelessWidget {
 }
 
 class _CategoryIcon extends StatelessWidget {
-  const _CategoryIcon({this.value, this.slug});
+  const _CategoryIcon({this.value, this.slug, this.color});
   final String? value;
   final String? slug;
+  final Color? color;
 
   static IconData _resolveIcon(String? icon, String? slug) {
     final key =
@@ -118,6 +163,7 @@ class _CategoryIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = color ?? AppColors.amberDark;
     final uri = Uri.tryParse(value ?? '');
     if (uri?.hasScheme == true) {
       return Image.network(
@@ -127,14 +173,14 @@ class _CategoryIcon extends StatelessWidget {
         errorBuilder: (_, _, _) => Icon(
           _resolveIcon(value, slug),
           size: 34,
-          color: AppColors.amberDark,
+          color: effectiveColor,
         ),
       );
     }
     return Icon(
       _resolveIcon(value, slug),
       size: 34,
-      color: AppColors.amberDark,
+      color: effectiveColor,
     );
   }
 }

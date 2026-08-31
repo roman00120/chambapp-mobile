@@ -46,7 +46,8 @@ final class FakeServiceRepository implements ServiceRepository {
   List<ServiceModel> services = const [testService];
 
   @override
-  Future<ServiceModel> getService(int id) async => testService;
+  Future<ServiceModel> getService(int id) async =>
+      services.firstWhere((s) => s.id == id, orElse: () => testService);
 
   @override
   Future<List<ServiceModel>> search({
@@ -110,18 +111,20 @@ final class FakeJobRepository implements JobRepository {
 
   int createScheduledCalls = 0;
   ScheduledJobInput? lastScheduledInput;
+  JobModel? scheduledJobResult;
+  JobModel? immediateJobResult;
 
   @override
   Future<JobModel> createImmediate(ImmediateJobInput input) {
     immediateCalls++;
-    return immediateCompleter?.future ?? Future.value(testJob);
+    return immediateCompleter?.future ?? Future.value(immediateJobResult ?? testJob);
   }
 
   @override
   Future<JobModel> createScheduled(ScheduledJobInput input) async {
     createScheduledCalls++;
     lastScheduledInput = input;
-    return testJob;
+    return scheduledJobResult ?? testJob;
   }
 
   @override
@@ -168,6 +171,16 @@ final class FakeJobRepository implements JobRepository {
   @override
   Future<JobModel> confirmJob(int id, String completionCode) {
     confirmCalls++;
+    return _workflow();
+  }
+
+  @override
+  Future<JobModel> acceptJob(int id) {
+    return _workflow();
+  }
+
+  @override
+  Future<JobModel> rejectJob(int id) {
     return _workflow();
   }
 

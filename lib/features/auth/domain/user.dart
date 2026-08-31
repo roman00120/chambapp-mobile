@@ -53,6 +53,12 @@ final class User {
 
   bool get isAdmin => role == UserRole.admin || capabilities.contains('admin');
 
+  UserRole get effectiveRole {
+    if (activeMode == 'client') return UserRole.client;
+    if (activeMode == 'professional') return UserRole.professional;
+    return role;
+  }
+
   User copyWith({
     String? email,
     String? activeMode,

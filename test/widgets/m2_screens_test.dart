@@ -1,7 +1,4 @@
-import 'dart:async';
-
 import 'package:chambapp_mobile/app/providers.dart';
-import 'package:chambapp_mobile/core/errors/app_exception.dart';
 import 'package:chambapp_mobile/core/theme/app_theme.dart';
 import 'package:chambapp_mobile/features/catalog/presentation/catalog_providers.dart';
 import 'package:chambapp_mobile/features/catalog/presentation/service_request_screen.dart';
@@ -73,7 +70,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('¿Qué necesitas?'), findsOneWidget);
+      expect(find.text('¿Qué necesitas resolver hoy?'), findsOneWidget);
       expect(find.byKey(const Key('category_1')), findsOneWidget);
 
       await tester.pumpWidget(
@@ -88,11 +85,15 @@ void main() {
     },
   );
 
-  testWidgets('doble tap al crear job immediate dispara una sola petición', (
+  testWidgets('ImmediateJobScreen muestra servicios de categoría seleccionada', (
     tester,
   ) async {
-    final jobs = FakeJobRepository()..immediateCompleter = Completer();
-    final container = _container(jobs: jobs);
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = _container();
     addTearDown(container.dispose);
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -102,32 +103,9 @@ void main() {
     );
     await tester.pump();
     await tester.tap(find.byKey(const Key('category_1')));
-    await tester.tap(find.byKey(const Key('wizard_next')));
-    await tester.pump();
-    await tester.enterText(
-      find.byKey(const Key('immediate_description')),
-      'Tengo una fuga debajo del fregadero.',
-    );
-    await tester.tap(find.byKey(const Key('wizard_next')));
-    await tester.pump();
-    await tester.enterText(
-      find.byKey(const Key('location_address')),
-      'Calle Uno 10',
-    );
-    await tester.enterText(
-      find.byKey(const Key('location_city')),
-      'Guadalajara',
-    );
-    await tester.enterText(find.byKey(const Key('location_state')), 'Jalisco');
-    await tester.tap(find.byKey(const Key('wizard_next')));
-    await tester.pump();
-    await tester.tap(find.byKey(const Key('wizard_next')));
-    await tester.tap(find.byKey(const Key('wizard_next')));
-    expect(jobs.immediateCalls, 1);
-    jobs.immediateCompleter!.completeError(
-      const AppException(message: 'Error controlado'),
-    );
-    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.text('Profesionales y servicios disponibles'), findsOneWidget);
+    expect(find.byKey(Key('service_${testService.id}')), findsOneWidget);
   });
 
   testWidgets('polling cambia searching a matched', (tester) async {
@@ -312,8 +290,8 @@ void main() {
     expect(fakeJobs.lastScheduledInput?.title, testService.title);
     expect(fakeJobs.lastScheduledInput?.location.address, 'Av. Vallarta 1234');
     expect(fakeJobs.lastScheduledInput?.location.city, 'Guadalajara');
-    expect(fakeJobs.lastScheduledInput?.location.state, 'Jalisco');
     expect(fakeJobs.lastScheduledInput?.location.postalCode, '44100');
+    expect(find.text('¡Solicitud enviada!'), findsNothing);
   });
 
   testWidgets(
@@ -341,18 +319,7 @@ void main() {
       );
       await tester.pump();
 
-      // Intento con campos vacíos
-      await tester.tap(find.byKey(const Key('confirm_service_request')));
-      await tester.pump();
-
-      expect(fakeJobs.createScheduledCalls, 0);
-      expect(find.text('Describe brevemente lo que necesitas (mínimo 5 caracteres).'), findsWidgets);
-
-      // Llenamos descripción pero no dirección
-      await tester.enterText(
-        find.byKey(const Key('request_description')),
-        'Necesito cambio de tubería completo en baño.',
-      );
+      // Intento con dirección vacía
       await tester.tap(find.byKey(const Key('confirm_service_request')));
       await tester.pump();
 

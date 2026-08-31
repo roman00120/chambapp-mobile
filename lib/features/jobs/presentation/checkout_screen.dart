@@ -11,8 +11,17 @@ import 'package:url_launcher/url_launcher.dart';
 
 typedef ExternalUrlLauncher = Future<bool> Function(Uri uri);
 final externalUrlLauncherProvider = Provider<ExternalUrlLauncher>(
-  (_) =>
-      (uri) => launchUrl(uri, mode: LaunchMode.externalApplication),
+  (_) => (uri) async {
+    final opened = await launchUrl(
+      uri,
+      mode: LaunchMode.inAppBrowserView,
+      browserConfiguration: const BrowserConfiguration(showTitle: true),
+    );
+    if (!opened) {
+      return launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+    return true;
+  },
 );
 
 class CheckoutScreen extends ConsumerStatefulWidget {
@@ -100,7 +109,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                       )
                     : const Icon(Icons.payment),
                 label: Text(
-                  _preparing ? 'Preparando pago…' : 'Pagar Chamba',
+                  _preparing ? 'Abriendo pago…' : 'Pagar Chamba',
                 ),
               ),
             if (payment != null && payment.status != PaymentStatus.approved)
@@ -115,14 +124,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   }
 
   Future<void> _confirmAndCheckout(JobModel job) async {
-    final basePrice = _payment?.baseAmount ??
+    final base = _payment?.baseAmount ??
         job.economicBreakdown?.baseAmount ??
         job.agreedPrice ??
         job.service?.price;
-    final parsedBase = basePrice != null ? double.tryParse(basePrice) : null;
     final total = _payment?.customerTotal ??
         job.economicBreakdown?.customerTotal ??
-        (parsedBase != null ? (parsedBase * 1.15).toStringAsFixed(2) : (job.agreedPrice ?? '--'));
+        _payment?.grossAmount ??
+        (base != null
+            ? ((double.tryParse(base) ?? 0) * 1.15).toStringAsFixed(2)
+            : job.agreedPrice ?? '--');
     final currency = _payment?.currency ?? job.currency ?? 'MXN';
 
     final confirmed = await showDialog<bool>(
@@ -169,7 +180,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
         await _recoverCheckoutTimeout();
       } else if (mounted) {
         setState(
-          () => _message = 'No pudimos iniciar el pago. Intenta nuevamente.',
+          () => _message = '[${error.statusCode ?? "ERR"}] ${error.message}',
         );
       }
     } finally {
@@ -254,6 +265,7 @@ class _Summary extends StatelessWidget {
         payment?.grossAmount ??
         (parsedBase != null ? (parsedBase * 1.15).toStringAsFixed(2) : (job.agreedPrice ?? '--'));
     final currency = payment?.currency ?? job.currency ?? 'MXN';
+    final proName = job.professional?.name ?? job.service?.professional?.name;
 
     return Card(
       child: Padding(
@@ -265,8 +277,8 @@ class _Summary extends StatelessWidget {
               job.service?.title ?? job.category?.name ?? job.title,
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            if (job.professional != null)
-              Text('Profesional: ${job.professional!.name}'),
+            if (proName != null)
+              Text('Profesional: $proName'),
             const Divider(),
             Text(
               'Precio base: \$$basePrice $currency',

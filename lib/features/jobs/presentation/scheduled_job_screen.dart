@@ -126,7 +126,13 @@ class _ScheduledJobScreenState extends ConsumerState<ScheduledJobScreen> {
             ),
           );
       ref.invalidate(jobsProvider);
-      if (mounted) context.go('/jobs/${job.id}?created=scheduled');
+      if (mounted) {
+        if (job.status == JobStatus.awaitingPayment) {
+          context.go('/jobs/${job.id}/checkout');
+        } else {
+          context.go('/jobs/${job.id}?created=scheduled');
+        }
+      }
     } catch (error) {
       if (mounted) _error('$error');
     } finally {
@@ -161,6 +167,7 @@ class _ScheduledJobScreenState extends ConsumerState<ScheduledJobScreen> {
                     .firstOrNull;
                 return CategoryGrid(
                   categories: items,
+                  selectedId: _categoryId,
                   onTap: (category) => setState(() {
                     _categoryId = category.id;
                     _category = category;

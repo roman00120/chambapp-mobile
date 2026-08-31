@@ -2,6 +2,8 @@ import 'package:chambapp_mobile/features/auth/domain/user.dart';
 import 'package:chambapp_mobile/features/jobs/domain/job_models.dart';
 
 enum JobWorkflowActionType {
+  acceptJob,
+  rejectJob,
   pay,
   onTheWay,
   arrived,
@@ -49,6 +51,11 @@ abstract final class JobWorkflowActions {
     }
     if (isProfessional) {
       return switch (status) {
+        JobStatus.pending => const JobPrimaryAction(
+          type: JobWorkflowActionType.acceptJob,
+          label: 'Aceptar solicitud',
+          loadingLabel: 'Aceptando solicitud…',
+        ),
         JobStatus.paid => const JobPrimaryAction(
           type: JobWorkflowActionType.onTheWay,
           label: 'Ir al servicio',
@@ -84,20 +91,32 @@ abstract final class JobWorkflowActions {
 
   static JobPrimaryAction? secondaryForJob({
     required bool isClient,
+    required bool isProfessional,
     required JobStatus status,
-  }) =>
-      isClient && status == JobStatus.awaitingConfirmation
-          ? const JobPrimaryAction(
-              type: JobWorkflowActionType.dispute,
-              label: 'Reportar un problema',
-              loadingLabel: 'Enviando reporte…',
-              destructive: true,
-            )
-          : null;
+  }) {
+    if (isClient && status == JobStatus.awaitingConfirmation) {
+      return const JobPrimaryAction(
+        type: JobWorkflowActionType.dispute,
+        label: 'Reportar un problema',
+        loadingLabel: 'Enviando reporte…',
+        destructive: true,
+      );
+    }
+    if (isProfessional && status == JobStatus.pending) {
+      return const JobPrimaryAction(
+        type: JobWorkflowActionType.rejectJob,
+        label: 'Rechazar solicitud',
+        loadingLabel: 'Rechazando solicitud…',
+        destructive: true,
+      );
+    }
+    return null;
+  }
 
   static JobPrimaryAction? secondary(UserRole role, JobStatus status) =>
       secondaryForJob(
         isClient: role == UserRole.client || role == UserRole.admin,
+        isProfessional: role == UserRole.professional,
         status: status,
       );
 }

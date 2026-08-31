@@ -13,15 +13,12 @@ import 'package:chambapp_mobile/features/catalog/presentation/service_detail_scr
 import 'package:chambapp_mobile/features/catalog/presentation/service_request_screen.dart';
 import 'package:chambapp_mobile/features/favorites/presentation/favorites_screen.dart';
 import 'package:chambapp_mobile/features/home/presentation/client_home_screen.dart';
-import 'package:chambapp_mobile/features/jobs/domain/job_models.dart';
 import 'package:chambapp_mobile/features/jobs/presentation/immediate_job_screen.dart';
 import 'package:chambapp_mobile/features/jobs/presentation/job_detail_screen.dart';
 import 'package:chambapp_mobile/features/jobs/presentation/checkout_screen.dart';
 import 'package:chambapp_mobile/features/jobs/presentation/dispute_screen.dart';
-import 'package:chambapp_mobile/features/jobs/presentation/quote_form_screen.dart';
 import 'package:chambapp_mobile/features/jobs/presentation/jobs_screen.dart';
 import 'package:chambapp_mobile/features/jobs/presentation/scheduled_job_screen.dart';
-import 'package:chambapp_mobile/features/jobs/presentation/searching_job_screen.dart';
 import 'package:chambapp_mobile/features/navigation/presentation/client_shell.dart';
 import 'package:chambapp_mobile/features/notifications/presentation/notifications_screen.dart';
 import 'package:chambapp_mobile/features/reports/presentation/security_center_screen.dart';
@@ -296,17 +293,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/request/scheduled',
-        builder: (_, state) => ScheduledJobScreen(
-          initialCategoryId: _nullableId(state.uri.queryParameters['category']),
-          serviceId: _nullableId(state.uri.queryParameters['service']),
-        ),
+        builder: (_, state) {
+          final serviceId = _nullableId(state.uri.queryParameters['service']);
+          if (serviceId != null) {
+            return ServiceRequestScreen(
+              serviceId: serviceId,
+              service: state.extra is ServiceModel ? state.extra! as ServiceModel : null,
+            );
+          }
+          return ScheduledJobScreen(
+            initialCategoryId: _nullableId(state.uri.queryParameters['category']),
+          );
+        },
       ),
       GoRoute(
         path: '/jobs/:id/searching',
-        builder: (_, state) => SearchingJobScreen(
-          jobId: _id(state.pathParameters['id']),
-          initialJob: state.extra is JobModel ? state.extra! as JobModel : null,
-        ),
+        redirect: (_, state) => '/jobs/${state.pathParameters['id']}/checkout',
       ),
       GoRoute(
         path: '/jobs/:id',
@@ -317,8 +319,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/jobs/:id/quote',
-        builder: (_, state) =>
-            QuoteFormScreen(jobId: _id(state.pathParameters['id'])),
+        redirect: (_, state) => '/jobs/${state.pathParameters['id']}',
       ),
       GoRoute(
         path: '/jobs/:id/checkout',

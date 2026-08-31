@@ -96,28 +96,29 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
     final detail = ref.watch(jobDetailProvider(widget.jobId));
     final quotes = ref.watch(jobQuotesProvider(widget.jobId));
     final currentUser = ref.watch(authControllerProvider).user;
-    final role = currentUser?.role;
+    final effectiveRole = currentUser?.effectiveRole ?? currentUser?.role;
     final currentJob = detail.value;
     if (currentJob != null) _lastJob = currentJob;
 
-    final isOwnerClient = currentJob != null &&
+    final isJobClient = currentJob != null &&
+        currentUser != null &&
         currentJob.clientId != null &&
-        currentUser != null &&
         currentJob.clientId == currentUser.id;
-    final isAssignedPro = currentJob != null &&
-        currentJob.professional?.userId != null &&
+
+    final isJobProfessional = currentJob != null &&
         currentUser != null &&
+        currentJob.professional?.userId != null &&
         currentJob.professional!.userId == currentUser.id;
 
-    final isClient = currentJob != null &&
-        (isOwnerClient ||
-         (!isAssignedPro && currentUser?.activeMode == 'client') ||
-         (!isAssignedPro && (role == UserRole.client || role == UserRole.admin)));
+    final isClient = isJobClient ||
+        (!isJobProfessional &&
+            currentJob != null &&
+            (effectiveRole == UserRole.client || effectiveRole == UserRole.admin));
 
-    final isProfessional = currentJob != null &&
-        (isAssignedPro ||
-         (!isOwnerClient && currentUser?.activeMode == 'professional') ||
-         (!isOwnerClient && role == UserRole.professional));
+    final isProfessional = isJobProfessional ||
+        (!isJobClient &&
+            currentJob != null &&
+            effectiveRole == UserRole.professional);
 
     final primary = currentJob == null || currentUser == null
         ? null
@@ -221,10 +222,11 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
 
   Widget _professionalContent(JobModel job) {
     final canQuote =
-        job.status == JobStatus.matched ||
-        job.status == JobStatus.accepted ||
-        (job.status == JobStatus.awaitingQuote &&
-            !job.quotes.any((quote) => quote.status == QuoteStatus.pending));
+        job.service == null &&
+        (job.status == JobStatus.matched ||
+            job.status == JobStatus.accepted ||
+            (job.status == JobStatus.awaitingQuote &&
+                !job.quotes.any((quote) => quote.status == QuoteStatus.pending)));
     if (canQuote) {
       return FilledButton.icon(
         onPressed: () async {
@@ -245,13 +247,23 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
       );
     }
     return switch (job.status) {
+      JobStatus.pending => job.service != null
+          ? _StateCard(
+              title: 'Nueva solicitud directa',
+              body:
+                  'Servicio: "${job.service!.title}" por \$${job.service!.price} MXN. Puedes aceptarla o rechazarla en la barra inferior.',
+            )
+          : const _StateCard(
+              title: 'Solicitud pendiente',
+              body: 'Esperando respuesta o asignación.',
+            ),
       JobStatus.awaitingQuote => const _StateCard(
         title: 'Cotización enviada',
         body: 'Esperando respuesta del cliente.',
       ),
       JobStatus.awaitingPayment => const _StateCard(
-        title: 'Cliente aceptó',
-        body: 'Esperando confirmación del pago.',
+        title: 'Solicitud aceptada',
+        body: 'Esperando confirmación del pago del cliente.',
       ),
       JobStatus.awaitingConfirmation => const _StateCard(
         title: 'Esperando confirmación del cliente',
@@ -422,6 +434,10 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
     try {
       final repository = ref.read(jobRepositoryProvider);
       switch (action.type) {
+        case JobWorkflowActionType.acceptJob:
+          await repository.acceptJob(job.id);
+        case JobWorkflowActionType.rejectJob:
+          await repository.rejectJob(job.id);
         case JobWorkflowActionType.pay:
           if (mounted) context.push('/jobs/${job.id}/checkout');
           return;
@@ -451,6 +467,14 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen>
 
   Future<bool> _confirmAction(JobWorkflowActionType type) async {
     final content = switch (type) {
+      JobWorkflowActionType.acceptJob => (
+        '¿Aceptar esta solicitud?',
+        'El cliente podrá proceder con el pago del servicio.',
+      ),
+      JobWorkflowActionType.rejectJob => (
+        '¿Rechazar esta solicitud?',
+        'La solicitud quedará cancelada.',
+      ),
       JobWorkflowActionType.arrived => (
         '¿Confirmas que ya llegaste al lugar?',
         'Registrar llegada',
@@ -854,37 +878,68 @@ class _JobTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = switch (job.status) {
-      JobStatus.pending || JobStatus.searching => 0,
-      JobStatus.matched || JobStatus.accepted || JobStatus.awaitingQuote => 1,
-      JobStatus.awaitingPayment => 2,
-      JobStatus.paid => 3,
-      JobStatus.onTheWay => 4,
-      JobStatus.arrived => 5,
-      JobStatus.inProgress => 6,
-      JobStatus.awaitingConfirmation || JobStatus.disputed => 7,
-      JobStatus.completed => 8,
-      _ => 0,
-    };
-    final steps = <(String, DateTime?)>[
-      ('Solicitud creada', job.createdAt),
-      ('Profesional encontrado', null),
-      ('Cotización', null),
-      ('Pago', job.payment?.paidAt),
-      ('En camino', null),
-      ('Llegó', null),
-      ('Trabajo iniciado', null),
-      (
-        job.status == JobStatus.disputed
-            ? 'Reporte en revisión'
-            : 'Profesional terminó',
-        null,
-      ),
-      (
-        'Cliente confirmó',
-        job.status == JobStatus.completed ? job.updatedAt : null,
-      ),
-    ];
+    final isDirect = job.service != null;
+    final progress = isDirect
+        ? switch (job.status) {
+            JobStatus.pending || JobStatus.awaitingPayment => 0,
+            JobStatus.paid => 1,
+            JobStatus.onTheWay => 2,
+            JobStatus.arrived => 3,
+            JobStatus.inProgress => 4,
+            JobStatus.awaitingConfirmation || JobStatus.disputed => 5,
+            JobStatus.completed => 6,
+            _ => 0,
+          }
+        : switch (job.status) {
+            JobStatus.pending || JobStatus.searching => 0,
+            JobStatus.matched || JobStatus.accepted || JobStatus.awaitingQuote => 1,
+            JobStatus.awaitingPayment => 2,
+            JobStatus.paid => 3,
+            JobStatus.onTheWay => 4,
+            JobStatus.arrived => 5,
+            JobStatus.inProgress => 6,
+            JobStatus.awaitingConfirmation || JobStatus.disputed => 7,
+            JobStatus.completed => 8,
+            _ => 0,
+          };
+
+    final steps = isDirect
+        ? <(String, DateTime?)>[
+            ('Contratación creada', job.createdAt),
+            ('Pago confirmado', job.payment?.paidAt),
+            ('En camino', null),
+            ('Llegó', null),
+            ('Trabajo iniciado', null),
+            (
+              job.status == JobStatus.disputed
+                  ? 'Reporte en revisión'
+                  : 'Profesional terminó',
+              null,
+            ),
+            (
+              'Cliente confirmó',
+              job.status == JobStatus.completed ? job.updatedAt : null,
+            ),
+          ]
+        : <(String, DateTime?)>[
+            ('Solicitud creada', job.createdAt),
+            ('Profesional encontrado', null),
+            ('Cotización', null),
+            ('Pago', job.payment?.paidAt),
+            ('En camino', null),
+            ('Llegó', null),
+            ('Trabajo iniciado', null),
+            (
+              job.status == JobStatus.disputed
+                  ? 'Reporte en revisión'
+                  : 'Profesional terminó',
+              null,
+            ),
+            (
+              'Cliente confirmó',
+              job.status == JobStatus.completed ? job.updatedAt : null,
+            ),
+          ];
     return Column(
       children: List.generate(steps.length, (index) {
         final done = index <= progress;

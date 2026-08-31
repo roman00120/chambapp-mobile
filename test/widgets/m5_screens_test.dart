@@ -241,4 +241,48 @@ void main() {
       container.dispose();
     }
   });
+
+  testWidgets(
+    'checkout renders exact 50 base, 7.50 fee and 57.50 total for catalog service',
+    (tester) async {
+      final job = JobModel(
+        id: 50,
+        title: 'Informática (mantenimiento PC)',
+        description: 'Servicio de mantenimiento',
+        status: JobStatus.awaitingPayment,
+        statusLabel: 'Esperando pago',
+        agreedPrice: '50.00',
+        currency: 'MXN',
+        economicBreakdown: const EconomicBreakdown(
+          baseAmount: '50.00',
+          currency: 'MXN',
+          economicModelVersion: 'client_15_professional_15',
+          clientServiceFeePercent: '15.00',
+          clientServiceFee: '7.50',
+          customerTotal: '57.50',
+        ),
+      );
+      final jobs = FakeJobRepository()..job = job;
+      final payments = FakePaymentRepository();
+      final container = ProviderContainer(
+        overrides: [
+          jobRepositoryProvider.overrideWithValue(jobs),
+          paymentRepositoryProvider.overrideWithValue(payments),
+          externalUrlLauncherProvider.overrideWithValue((_) async => true),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        material(container, const CheckoutScreen(jobId: 50)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Confirmar contratación'), findsOneWidget);
+      expect(find.text('Precio base: \$50.00 MXN'), findsOneWidget);
+      expect(find.text('Cargo de servicio Chambapp (15.00%): +\$7.50'), findsOneWidget);
+      expect(find.text('Total: \$57.50 MXN'), findsOneWidget);
+      expect(find.text('Pagar Chamba'), findsOneWidget);
+    },
+  );
 }
